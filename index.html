@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>netclab</title>
+<meta name="description" content="Network labs on Kubernetes, and the tooling that configures them.">
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #ffffff;
+    --fg: #1a1a1a;
+    --muted: #5c5c5c;
+    --rule: #e2e2e2;
+    --link: #0b5fff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14171a;
+      --fg: #e8e8e8;
+      --muted: #9aa0a6;
+      --rule: #2c3136;
+      --link: #7aa7ff;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 4rem 1.5rem 6rem;
+    background: var(--bg);
+    color: var(--fg);
+    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  main { max-width: 46rem; margin: 0 auto; }
+  h1 { font-size: 2.25rem; margin: 0 0 .35rem; letter-spacing: -0.02em; }
+  .tagline { color: var(--muted); margin: 0 0 3rem; font-size: 1.05rem; }
+  h2 {
+    font-size: .8rem; text-transform: uppercase; letter-spacing: .08em;
+    color: var(--muted); font-weight: 600;
+    margin: 0 0 1rem; padding-bottom: .5rem; border-bottom: 1px solid var(--rule);
+  }
+  ul { list-style: none; margin: 0 0 3rem; padding: 0; }
+  li { padding: 1rem 0; border-bottom: 1px solid var(--rule); }
+  li:last-child { border-bottom: none; }
+  .name { font-weight: 600; font-size: 1.05rem; }
+  .desc { color: var(--muted); margin: .2rem 0 .5rem; }
+  .links a { margin-right: 1.1rem; font-size: .9rem; }
+  a { color: var(--link); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  footer { color: var(--muted); font-size: .875rem; border-top: 1px solid var(--rule); padding-top: 1.25rem; }
+</style>
+</head>
+<body>
+<main>
+
+  <h1>netclab</h1>
+  <p class="tagline">Network labs on Kubernetes, and the tooling that configures them.</p>
+
+  <h2>Labs</h2>
+  <ul>
+    <li>
+      <div class="name">netclab-chart</div>
+      <div class="desc">Helm chart that runs lab routers, hosts and traffic generators as pods — cEOS, SR Linux, FRR, ixia-c — wired together with Multus.</div>
+      <div class="links">
+        <a href="/netclab-chart/">Helm repository</a>
+        <a href="https://github.com/netclab/netclab-chart">Source</a>
+      </div>
+    </li>
+  </ul>
+
+  <h2>Configuration</h2>
+  <ul>
+    <li>
+      <div class="name">netclab-xp</div>
+      <div class="desc">Crossplane Configuration package. Abstract APIs for network elements, with several mechanisms behind them — RESTCONF, JSON-RPC, eAPI and a fabric-level abstraction.</div>
+      <div class="links">
+        <a href="/netclab-xp/">Documentation</a>
+        <a href="https://github.com/netclab/netclab-xp">Source</a>
+      </div>
+    </li>
+    <li>
+      <div class="name">function-avd</div>
+      <div class="desc">Crossplane function that expands one Fabric resource into per-device Arista configs with pyavd, pushes them over eAPI, and reclaims on-box drift every reconcile.</div>
+      <div class="links">
+        <a href="https://github.com/netclab/function-avd">Source</a>
+      </div>
+    </li>
+    <li>
+      <div class="name">function-eapi</div>
+      <div class="desc">Crossplane function that turns CLI configuration into resources applied to Arista EOS devices over JSON-RPC.</div>
+      <div class="links">
+        <a href="https://github.com/netclab/function-eapi">Source</a>
+      </div>
+    </li>
+  </ul>
+
+  <footer>
+    <a href="https://github.com/netclab">github.com/netclab</a>
+  </footer>
+
+</main>
+</body>
+</html>
