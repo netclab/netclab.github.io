@@ -23,7 +23,7 @@ color: '#F8FAFC'            # light text
 - **Declarative & GitOps-ready** → manage routers like cloud resources  
 - **Kubernetes-native state** → continuous reconciliation  
 - **OpenConfig** → differences handled automatically  
-- **RESTCONF and JSON-RPC support** → starting with Arista EOS / cEOS  
+- **RESTCONF, JSON-RPC and eAPI** → one API over three mechanisms, on Arista EOS / cEOS  
 - **Fast onboarding** → add new routers or services easily
 
 ---
@@ -31,13 +31,13 @@ color: '#F8FAFC'            # light text
 # ⚙️ Abstractions
 <br>
 
-***High-Level Services*** <span style="color:#60A5FA">`FabricIP` / `EvpnService`</span>  
+***A whole network*** <span style="color:#60A5FA">`Fabric`</span>  
       ▼  
-***Mid-Level Router Abstractions*** <span style="color:#60A5FA">`Router`</span>  
+***One device*** <span style="color:#60A5FA">`Router`</span>  
       ▼  
-***Low-Level XRDs*** <span style="color:#60A5FA">`Loopback` / `RoutedInterface` / `BgpGlobal` / `BgpNeighbor`</span>  
+***One setting*** <span style="color:#60A5FA">`LoopbackInterface` / `RoutedInterface` / `BgpGlobal` / `BgpNeighbor`</span>  
       ▼  
-***RESTCONF & JSON-RPC Provider*** <span style="color:#60A5FA">`provider-http`</span>
+***RESTCONF · JSON-RPC · eAPI*** <span style="color:#60A5FA">`provider-http` / `function-eapi`</span>
 
 ---
 
@@ -186,6 +186,8 @@ router.eos.netclab.dev/ceos01   ceos01.default.svc.cluster.local   65001   10.0.
 
 # 🎯 Next Steps
 
+[**https://netclab.dev**](https://netclab.dev)
+
 *Repo:*
 [https://github.com/netclab/netclab-xp](https://github.com/netclab/netclab-xp)
 
@@ -193,4 +195,4 @@ router.eos.netclab.dev/ceos01   ceos01.default.svc.cluster.local   65001   10.0.
 [https://marketplace.upbound.io/configurations/netclab/netclab-xp](https://marketplace.upbound.io/configurations/netclab/netclab-xp)
 
 *Listed in Crossplane Adopters:*
-curl -s https://github.com/crossplane/crossplane/blob/main/ADOPTERS.md | grep -o -E 'github.com/[a-z]+/netclab-xp'
+curl -s https://github.com/crossplane/crossplane/blob/main/ADOPTERS.md | grep -o -E 'netclab'

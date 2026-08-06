@@ -1,0 +1,102 @@
+name: Pages
+
+# Builds the organisation site and publishes it to GitHub Pages.
+#
+# The slide decks used to be hand exports from the VSCode Marp extension,
+# committed next to their source. With two decks that is two manual steps per
+# change and no way to tell whether the committed HTML still matches the
+# Markdown. marp-cli renders both here instead, so the Markdown is the only
+# source of truth and a PDF -- the form anything posted is published in -- falls
+# out of the same build.
+#
+# `scripts/build.sh` is the entire build. This workflow decides only when to run
+# it and what to do with the result, so a local run and a published build cannot
+# disagree about what "the site" is.
+#
+# NOTE: this only publishes if the repository's Pages source is set to GitHub
+# Actions. While it is `legacy`, deploy-pages fails -- the workflow is correct
+# and the setting is what is wrong.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Pages allows one deployment at a time. Do not cancel a running one: a
+# half-finished deploy would leave the site on whatever was published last.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: build the site
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+
+      # marp-cli exports PDF through a headless browser. ubuntu-latest ships
+      # Chrome preinstalled, but resolving it here rather than relying on
+      # auto-detection means a change to the runner image fails this step
+      # instead of quietly producing a deck with no PDF beside it.
+      - name: Locate Chrome
+        run: |
+          set -euo pipefail
+          chrome=$(command -v google-chrome || command -v chromium-browser)
+          echo "CHROME_PATH=$chrome" >> "$GITHUB_ENV"
+          "$chrome" --version
+
+      - name: Build
+        run: ./scripts/build.sh _site
+
+      # Runs on pull requests too, where nothing is deployed, so a deck that
+      # stopped rendering -- or a missing CNAME -- fails in review rather than
+      # on main. CNAME is the one worth asserting: Pages drops the custom domain
+      # if the deployed artifact does not carry it, and losing it takes
+      # netclab.dev down.
+      #
+      # The loop is driven by the sources, not by a list written here, so a deck
+      # added under slides/ is covered without editing this file.
+      - name: Check the build
+        run: |
+          set -euo pipefail
+          test -s _site/CNAME
+          test -s _site/index.html
+          test -s _site/slides/index.html
+          for deck in slides/*/; do
+            name=$(basename "$deck")
+            test -s "_site/slides/$name/index.html"
+            test -s "_site/slides/$name/$name.pdf"
+            echo "ok: $name"
+          done
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+
+  deploy:
+    name: deploy to Pages
+    needs: build
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
