@@ -90,7 +90,12 @@ jobs:
     needs: build
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # Generous on purpose. This step only waits on GitHub's Pages backend, and
+    # on this repository that wait has been measured at 8m04s -- a 10 minute
+    # cap killed the very next run at 10m00s. The job does no work of its own,
+    # so a high ceiling costs nothing and a low one fails a deploy that would
+    # have succeeded.
+    timeout-minutes: 30
     permissions:
       pages: write
       id-token: write
