@@ -103,18 +103,20 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      # `timeout` is the action's own limit, separate from the job's
-      # `timeout-minutes` above; both default to 10 minutes, so raising only
-      # the job moves the failure by seconds. When it fires the action does not
-      # merely give up -- it CANCELS the deployment, and the deployment is
-      # keyed by commit SHA, so re-running that same commit then fails at once
-      # with "Deployment cancelled." Only a new commit recovers from it.
+      # ⚠ 600000 ms is deploy-pages' HARD MAXIMUM, not merely its default.
+      # Passing more is accepted, warned about and silently clamped:
       #
-      # Kept under the job's 30 minutes so the action times out and reports
-      # rather than being killed mid-flight. Deploys here measured 8m04s and
-      # 9m12s on 2026-08-06 -- close enough to the default that it was going to
-      # fire eventually, as it already did in netclab-xp.
+      #   Warning: timeout value is greater than the allowed maximum
+      #            - timeout set to the maximum of 600000 milliseconds.
+      #
+      # So a deploy can never wait more than ten minutes, whatever the job's
+      # `timeout-minutes` says. Deploys here measured 8m04s and 9m12s on
+      # 2026-08-06 and then failed at 10m07s the same afternoon, with GitHub
+      # reporting Pages fully operational throughout -- the margin is thin and
+      # nothing here can widen it.
+      #
+      # When it fires the action CANCELS the deployment, and deployments are
+      # keyed by commit SHA, so re-running that commit fails in seconds with
+      # "Deployment cancelled." Recovering needs a new commit, not a re-run.
       - id: deployment
         uses: actions/deploy-pages@v5
-        with:
-          timeout: 1200000
