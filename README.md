@@ -1,26 +1,28 @@
 # netclab.github.io
 
-The netclab organisation site. Served by GitHub Pages from `main` at the
-repository root.
+The netclab organisation site, served at **https://netclab.dev**.
 
-`.nojekyll` is present on purpose: files are served exactly as committed, so a
-hand-written `index.html` cannot collide with a Jekyll-rendered `index.md`, and
-exported HTML (the slide deck) needs no front matter.
+- `/` — the landing page, linking the projects
+- `/slides/` — slide decks about them
+
+Built by GitHub Actions and published to Pages. The landing pages are
+hand-written HTML; the decks are Marp Markdown, rendered to HTML and PDF by the
+build. Nothing generated is committed.
+
+See [DEVELOPMENT.md](DEVELOPMENT.md) to change any of it.
 
 ## Links are root-relative
 
 Project documentation lives in its own repository and is served by GitHub under
 `/<repo>/`. Links here use root-relative paths (`/netclab-xp/`) so they resolve
-both at `netclab.github.io` and, once the custom domain lands, at `netclab.dev`.
+both at `netclab.dev` and at `netclab.github.io`.
 
 ## Custom domain
 
-Not set yet. When `netclab.dev` is pointed here, set it under
-Settings → Pages — that writes the `CNAME` file — and enable *Enforce HTTPS*.
-Setting it before DNS points at GitHub makes this site redirect to a domain that
-does not serve it yet.
+`netclab.dev` is set on this repository, and verified at organisation level.
 
-Every project page then moves from `netclab.github.io/<repo>/` to
-`netclab.dev/<repo>/` automatically, with the path preserved. That is GitHub
-behaviour, not configuration: it cannot be turned off, and no project repository
-needs a `CNAME` of its own.
+Every project page moves with it: a project site with no domain of its own stops
+being served at `netclab.github.io/<repo>/` and redirects to
+`netclab.dev/<repo>/`, path preserved. That is GitHub behaviour, not
+configuration — it cannot be turned off, and **no project repository needs a
+`CNAME` of its own.**
