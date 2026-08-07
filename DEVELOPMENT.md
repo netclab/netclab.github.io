@@ -137,16 +137,20 @@ Canceling Pages deployment...
 Canceled deployment with ID 4551916b7a70daf994c522f1b1adb9f6692fa8e0
 ```
 
-That ID is the commit SHA. **Re-running the workflow cannot recover.** It creates
-a deployment for the same SHA, is handed the cancelled state, and fails in about
-ten seconds:
+That ID is the commit SHA — `e881ad7` was cancelled this way at
+`2026-08-06T14:07:03Z`. **Re-running that same run cannot recover.** It is handed
+the cancelled state and fails in about ten seconds:
 
 ```
 ##[error]Deployment cancelled.
 ```
 
-**Recovering needs a new commit, not a re-run.** A merged change stays
-unpublished until one lands.
+**A new run on the same SHA does recover, though.** The cancellation belongs to
+that deployment attempt, not to the commit, so a plain
+`gh workflow run Pages --ref main` is enough once the queue has cleared — and
+being free, it is what to try first. This file claimed until 2026-08-07 that
+recovery needed a new commit; it does not, and the wrong version costs an empty
+commit every time a queue runs slow.
 
 ### What a failed deploy does and does not cost
 
@@ -165,8 +169,8 @@ workflow had succeeded at **8m04s and 9m12s that same morning** before failing
 at 10m06s and 10m07s in the afternoon. The margin is thin by design and nothing
 here widens it.
 
-The response is to wait and then land any new commit — not to change
-configuration, and not to re-run, which only cancels another deployment.
+The response is to wait, then start a fresh run — not to change configuration.
+On 2026-08-07 the queue had cleared and a deploy took 49s.
 
 ## Checking your work
 
