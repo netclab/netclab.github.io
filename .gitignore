@@ -1,3 +1,4 @@
 # Build output of scripts/build.sh. The decks are rendered, never committed --
 # that is the point of building them in CI.
 _site/
+.claude/
