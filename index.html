@@ -43,13 +43,6 @@
   li { padding: 1rem 0; border-bottom: 1px solid var(--rule); }
   li:last-child { border-bottom: none; }
   .name { font-weight: 600; font-size: 1.05rem; }
-  .tag {
-    font-size: .68rem; font-weight: 600; text-transform: uppercase;
-    letter-spacing: .06em; vertical-align: .15em; margin-left: .5rem;
-    padding: .15rem .45rem; border-radius: 3px;
-    color: var(--bg); background: var(--link);
-  }
-  .note { color: var(--muted); font-size: .9rem; margin: -.4rem 0 1rem; }
   .desc { color: var(--muted); margin: .2rem 0 .5rem; }
   .links a { margin-right: 1.1rem; font-size: .9rem; }
   a { color: var(--link); text-decoration: none; }
@@ -67,34 +60,42 @@
   <ul>
     <li>
       <div class="name">netclab-chart</div>
-      <div class="desc">Helm chart that runs routers, hosts and traffic generators as pods — cEOS, SR Linux, FRR, ixia-c — cabled together with Multus. You describe a topology; it becomes a running network.</div>
+      <div class="desc">Helm chart that runs routers, hosts and traffic generators as pods — cEOS, SR Linux, FRR, ixia-c — cabled together with Multus. You describe a topology; it becomes a running network. <code>netclab</code>, on PyPI, brings the cluster and the lab up in one command.</div>
       <div class="links">
         <a href="/netclab-chart/">Helm repository</a>
+        <a href="https://pypi.org/project/netclab/">PyPI</a>
         <a href="https://github.com/netclab/netclab-chart">Source</a>
       </div>
     </li>
   </ul>
 
-  <h2>Configure the lab</h2>
+  <h2>Your AVD fabric, live in Kubernetes</h2>
   <ul>
     <li>
-      <div class="name">netclab-xp <span class="tag">start here</span></div>
-      <div class="desc">Crossplane package that turns router configuration into Kubernetes resources — from a single interface up to a whole fabric, over RESTCONF, JSON-RPC or eAPI.</div>
+      <div class="name">netadopt</div>
+      <div class="desc">Reads an AVD repository, reports what it holds, and writes it as Kubernetes objects — and a lab of its switches.</div>
       <div class="links">
-        <a href="/netclab-xp/">Documentation</a>
-        <a href="https://github.com/netclab/netclab-xp">Source</a>
+        <a href="https://pypi.org/project/netadopt/">PyPI</a>
+        <a href="https://github.com/netclab/netadopt">Source</a>
+      </div>
+    </li>
+    <li>
+      <div class="name">function-avd</div>
+      <div class="desc">Runs AVD in Kubernetes: builds each switch's configuration from those objects, pushes it over eAPI, and pushes it again after a change by hand.</div>
+      <div class="links">
+        <a href="https://github.com/netclab/function-avd">Source</a>
       </div>
     </li>
   </ul>
 
-  <h2>Underneath</h2>
-  <p class="note">Crossplane functions that netclab-xp builds on. You do not install these directly — it pulls them in.</p>
+  <h2>Configure devices</h2>
   <ul>
     <li>
-      <div class="name">function-avd</div>
-      <div class="desc">Expands one fabric design into per-device Arista configs with pyavd, pushes them over eAPI, and reclaims on-box drift every reconcile.</div>
+      <div class="name">netclab-xp</div>
+      <div class="desc">Crossplane package that turns router configuration into Kubernetes resources — from a single interface up to a whole router, over RESTCONF, JSON-RPC or eAPI.</div>
       <div class="links">
-        <a href="https://github.com/netclab/function-avd">Source</a>
+        <a href="/netclab-xp/">Documentation</a>
+        <a href="https://github.com/netclab/netclab-xp">Source</a>
       </div>
     </li>
     <li>
@@ -110,7 +111,7 @@
   <ul>
     <li>
       <div class="name">Slides</div>
-      <div class="desc">Two decks: the <code>eos</code> and <code>mid</code> layers resource by resource, and the fabric layer — one AVD design becoming a configuration for every switch in it.</div>
+      <div class="desc">Two decks: netclab-xp's resources, one setting and one router at a time, and an AVD fabric live in Kubernetes.</div>
       <div class="links">
         <a href="/slides/">Slides</a>
       </div>
