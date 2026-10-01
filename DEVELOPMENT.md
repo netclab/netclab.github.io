@@ -408,6 +408,9 @@ pushed back:
   bottom line. Render to images and look:
 
   ```bash
-  npx --yes @marp-team/marp-cli@4.5.0 --html slides/<name>/index.md \
+  timeout 180 npx --yes @marp-team/marp-cli@4.5.0 --html slides/<name>/index.md \
     --images png -o /tmp/check.png
   ```
+
+  The timeout is there because a render can hang without a word, and a second
+  run of the same deck finishes in seconds.

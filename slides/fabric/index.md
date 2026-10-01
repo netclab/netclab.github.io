@@ -2,15 +2,15 @@
 marp: true
 theme: default
 author: Michal Bakalarski
-title: One model, a whole network
-keywords: kubernetes,crossplane,arista,avd,pyavd,evpn,vxlan,eos_designs,networkautomation,cloudNative,eapi,iac,devops,gitops,netdevops,netclab,netclab-xp,function-avd
+title: Your AVD fabric, live in Kubernetes
+keywords: kubernetes,crossplane,arista,avd,ansible,evpn,vxlan,eos_designs,networkautomation,cloudNative,eapi,iac,devops,gitops,netdevops,netclab,netadopt,function-avd
 paginate: true
 backgroundColor: '#1E293B'  # dark slate
 color: '#F8FAFC'            # light text
 ---
 
-# 🌐 One model, a whole network
-*The fabric layer of [**netclab-xp**](https://github.com/netclab/netclab-xp), powered by AVD*
+# 🌐 Your AVD fabric, live in Kubernetes
+*[**netadopt**](https://github.com/netclab/netadopt) and [**function-avd**](https://github.com/netclab/function-avd), powered by AVD*
 <br>
 > ***An extensible data model that defines Arista's Unified Cloud Network architecture as "code"***
 > Powered by [avd.arista.com](https://avd.arista.com) and [crossplane.io](https://www.crossplane.io)
@@ -20,91 +20,140 @@ color: '#F8FAFC'            # light text
 # 📐 Where this sits
 <br>
 
-<span style="font-size:1.35em">***One network*** <span style="color:#FBBF24">`Fabric`</span></span>
-      ▼
-***One device*** <span style="color:#60A5FA">`Router`</span>
-      ▼
-***One setting*** <span style="color:#60A5FA">`RoutedInterface` / `BgpNeighbor` / `IpRouting`</span>
+***Your AVD repository*** <span style="color:#60A5FA">inventory · group_vars · playbook</span>
+      ▼ <span style="color:#FBBF24">`netadopt`</span>
+***Kubernetes objects*** <span style="color:#60A5FA">`Fabric` · `FabricInput`</span>
+      ▼ <span style="color:#FBBF24">`function-avd`</span> runs AVD
+***Every switch*** <span style="color:#60A5FA">`Device` → eAPI</span>
 
 ---
 
-# 🧩 Not a separate product
+# 🔍 netadopt reads the repository
 
-The `Fabric` API is **authored in [function-avd](https://github.com/netclab/function-avd)** and ships as `configuration-avd`, which netclab-xp names in `dependsOn`:
+```console
+$ git clone --depth 1 --branch v6.4.0 https://github.com/aristanetworks/avd
+$ cd avd/ansible_collections/arista/avd/examples
+$ uvx "netadopt[avd]" avd report single-dc-l3ls --playbook build.yml
+
+Inventory   named by ansible.cfg   8 hosts, 8 groups
+Variables   8 files                group_vars 8, host_vars 0
+Playbook    build.yml              1 play
+
+#   Play                                     Hosts    Roles
+0   Build Configurations and Documentation   FABRIC   eos_designs, eos_cli_config_gen
+
+Carried
+  Fabric         single-dc-l3ls, from play 0
+  FabricInputs   7
+```
+
+AVD's own `single-dc-l3ls` example, as Ansible reads it.
+
+---
+
+# 🧩 The repository, as objects
+
+```console
+$ uvx "netadopt[avd]" avd emit single-dc-l3ls --playbook build.yml > fabric.yaml
+```
 
 ```yaml
-kind: Configuration
-metadata:
-  name: netclab-xp
+kind: Fabric
+metadata: {name: single-dc-l3ls}
 spec:
-  dependsOn:
-    # ... provider-http, function-eapi and three contrib functions
-    - apiVersion: pkg.crossplane.io/v1
-      kind: Configuration
-      package: xpkg.upbound.io/netclab/configuration-avd
-      version: ">=v0.1.5"
+  inputs: [single-dc-l3ls-network-services, ...]   # seven, one per group_vars directory
+---
+kind: FabricInput
+metadata: {name: single-dc-l3ls-network-services}
+spec:
+  appliesTo: {group: NETWORK_SERVICES}
+  design:                                    # group_vars/NETWORK_SERVICES/, unchanged
+    tenants:
+    - name: TENANT1
 ```
-
-**Installing netclab-xp installs the fabric layer with it.**
 
 ---
 
-# ⚙️ What the function does
-<br>
+# 🧪 A lab from the same repository
 
-- **Takes one AVD `eos_designs` document** → tenants, VRFs, VLANs, uplinks
-- **Runs pyavd** → a complete, validated configuration for *every* device in the design
-- **Pushes over eAPI** → to the devices you say are actually running
-- **Validation lands on `status`** → a bad model is a message, not a broken switch
+```console
+$ uvx "netadopt[avd]" avd lab single-dc-l3ls --playbook build.yml --namespace dc1 \
+    --extra-vars-out lab-vars.yml --ceos-image ceos:4.36.1F \
+    --ceos-cpu 800m --ceos-memory 1500Mi > values.yaml
+$ uvx "netadopt[avd]" avd emit single-dc-l3ls --playbook build.yml \
+    -e @lab-vars.yml > fabric.yaml
+$ uvx netclab up --namespace dc1 --values values.yaml --crossplane v2.4.2 \
+    --configuration xpkg.upbound.io/netclab/configuration-avd:v0.2.2 \
+    --manifest runtime.yaml --manifest providerconfig.yaml --manifest fabric.yaml
+```
 
-One document in. Per-device configuration out.
+- **One cEOS per switch in the inventory**, cabled as AVD cables them
+- **`lab-vars.yml` points each switch at its cEOS pod**
 
 ---
 
-# 📌 The design is pinned, not copied
-<br>
+# ✅ Eight switches, eight Devices
 
-The scenario does not hold a copy of the model. It **reaches for it, at a tag**:
-
-```yaml
-resources:
-  - github.com/netclab/function-avd/examples/lab?ref=v0.1.6
+```console
+$ kubectl -n dc1 get devices
+NAME                        SYNCED   READY   COMPOSITION   AGE
+single-dc-l3ls-dc1-leaf1a   True     True    device-avd    17s
+single-dc-l3ls-dc1-leaf1b   True     True    device-avd    17s
+single-dc-l3ls-dc1-leaf1c   True     True    device-avd    17s
+single-dc-l3ls-dc1-leaf2a   True     True    device-avd    17s
+single-dc-l3ls-dc1-leaf2b   True     True    device-avd    17s
+single-dc-l3ls-dc1-leaf2c   True     True    device-avd    17s
+single-dc-l3ls-dc1-spine1   True     True    device-avd    17s
+single-dc-l3ls-dc1-spine2   True     True    device-avd    17s
 ```
 
-A topology derived from an AVD model is only valid for the AVD version that derived it — and that version lives upstream.
-
-> ***So "what happens when AVD moves?" has an answer: nothing, until someone moves the pin.***
+One `Device` per switch, each holding the configuration AVD built for it.
 
 ---
 
-# ✍️ The entire scenario
-<br>
+# 🔁 Built, and running
 
-```yaml
-- op: add
-  path: /spec/design/tenants/0/vrfs/0/svis/-
-  value:
-    id: 13
-    name: VRF10_VLAN13
-    enabled: true
-    ip_address_virtual: 10.10.13.1/24
+```console
+$ kubectl -n dc1 get devices single-dc-l3ls-dc1-leaf1a \
+    -o jsonpath='{.status.configHash}{"\n"}{.status.deployed}'
+sha256:6471751dc97b16d9
+{"configHash":"sha256:6471751dc97b16d9","digest":"e31f4f334660655755ef8b069042c8485c80c360"}
 ```
 
-Four lines. One SVI, in a tenant VRF.
+- **`configHash`** — the configuration AVD built
+- **`deployed`** — the configuration the switch runs
+
+The same hash: the switch runs what the model says.
+
+---
+
+# ✍️ The change
+
+```console
+$ kubectl -n dc1 patch fabricinputs.avd.netclab.dev single-dc-l3ls-network-services \
+    --type=json -p '[{"op": "add", "path": "/spec/design/tenants/0/vrfs/0/svis/-",
+      "value": {"id": 13, "name": "VRF10_VLAN13", "enabled": true,
+                "ip_address_virtual": "10.10.13.1/24"}}]'
+```
+
+One SVI, in a tenant VRF — the same edit as in `group_vars`.
+
+**On `dc1-leaf1a` within a minute** — 34 s in this run.
 
 ---
 
 # 📥 What reached `dc1-leaf1a`
 
 ```console
+$ kubectl -n dc1 exec dc1-leaf1a -- Cli -p 15 -c "show running-config"   # the VLAN 13 lines
 vlan 13
    name VRF10_VLAN13
+interface Port-Channel8
+   switchport trunk allowed vlan 11-13,21-22,3401-3402
 interface Vlan13
    description VRF10_VLAN13
    vrf VRF10
    ip address virtual 10.10.13.1/24
-interface Port-Channel8
-   switchport trunk allowed vlan 11-13,21-22,3401-3402
 interface Vxlan1
    vxlan vlan 13 vni 10013
 router bgp 65101
@@ -115,7 +164,7 @@ router bgp 65101
 
 ---
 
-# 🧠 What you did not write
+# 🧠 Computed, not written
 <br>
 
 - **`vni 10013`** — the VXLAN VNI
@@ -123,67 +172,57 @@ router bgp 65101
 - **`route-target both 10013:10013`** — the EVPN route-target
 - **`switchport trunk allowed vlan 11-13,…`** — the trunk list, *widened* rather than replaced
 
-None of it appears in the patch. All of it is derived from the design.
+None of it is in the patch. AVD derived all of it from the design.
 
 ---
 
 # 🎯 And where it did *not* land
 <br>
 
-`dc1-spine1` **received the push too** — and has **no `vlan 13` at all**.
-
-```bash
-kubectl -n avd exec dc1-spine1 -- Cli -p 15 -c "show vlan 13"
+```console
+$ kubectl -n dc1 exec dc1-spine1 -- Cli -p 15 -c "show vlan 13"
+% VLAN 13 not found in current VLAN database at line 1
 ```
 
-Nothing was excluded by hand. A tenant SVI belongs on leaves, so the model put it on leaves.
-
-> ***The interesting output is the device that was configured with nothing.***
+`dc1-spine1` is in the same fabric. Nothing was excluded by hand: a tenant SVI belongs on leaves, so the model put it on leaves.
 
 ---
 
-# 📊 One document, eight switches
+# ↩️ A change by hand goes back
+
+```console
+$ kubectl -n dc1 exec dc1-leaf1a -- Cli -p 15 -c $'configure\nno interface Vlan13\nend'
+```
+
+**Within about a minute `interface Vlan13` is back.**
+
+The switch runs what the model says. To change it, change the model.
+
+---
+
+# ♻️ Delete it, the config stays
 <br>
 
 ```console
-deviceCount: 8
-validation:
-  ok: true
-Ready: True
+$ kubectl -n dc1 delete -f fabric.yaml
+$ kubectl -n dc1 exec dc1-leaf1a -- Cli -p 15 -c "show vlan 13"
+VLAN  Name                             Status    Ports
+----- -------------------------------- --------- -------------------------------
+13    VRF10_VLAN13                     active    Cpu, Po3, Po8, Vx1
 ```
 
-- **Every device in the design gets a rendered configuration** — eight of them here, from one document
-- **pyavd validates the model first**, so a bad design is a message on `status` rather than a broken network
-
-**The design is what you maintain. The per-device configuration is derived.**
-
----
-
-# ♻️ Teardown leaves the switch configured
-<br>
-
-```bash
-kubectl delete -k scenarios/fabric
-```
-
-The `Fabric`, its `Device`s, the rendered ConfigMaps and the requests all go. **`vlan 13` stays.**
-
-This is the opposite of every other netclab-xp scenario, and it is deliberate: the requests carry `Observe, Create, Update` and **no `Delete`**.
-
-> ***A layer that pushes a switch's entire configuration must not have a teardown that wipes the switch.***
-
-To reset a device, restart its pod.
+The Fabric, its Devices and their Requests are gone. **The configuration stays**: a push replaces a switch's whole configuration, so reverting it on delete would wipe the switch.
 
 ---
 
 # 🎯 Try it
-<br>
 
 [**https://netclab.dev**](https://netclab.dev)
 
-*Repos — the package, and the function that renders the fabric:*
-[https://github.com/netclab/netclab-xp](https://github.com/netclab/netclab-xp)
-[https://github.com/netclab/function-avd](https://github.com/netclab/function-avd)
+*Read a repository, and bring up its lab:*
+[https://pypi.org/project/netadopt/](https://pypi.org/project/netadopt/)
+[https://pypi.org/project/netclab/](https://pypi.org/project/netclab/)
 
-*Registry:*
-[https://marketplace.upbound.io/configurations/netclab/netclab-xp](https://marketplace.upbound.io/configurations/netclab/netclab-xp)
+*Run it in Kubernetes:*
+[https://github.com/netclab/function-avd](https://github.com/netclab/function-avd)
+[https://marketplace.upbound.io/configurations/netclab/configuration-avd](https://marketplace.upbound.io/configurations/netclab/configuration-avd)
