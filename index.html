@@ -56,21 +56,16 @@
   <h1>netclab</h1>
   <p class="tagline">Network labs on Kubernetes, and the tooling that configures them.</p>
 
-  <h2>Run a lab</h2>
-  <ul>
-    <li>
-      <div class="name">netclab-chart</div>
-      <div class="desc">Helm chart that runs routers, hosts and traffic generators as pods — cEOS, SR Linux, FRR, ixia-c — cabled together with Multus. You describe a topology; it becomes a running network. <code>netclab</code>, on PyPI, brings the cluster and the lab up in one command.</div>
-      <div class="links">
-        <a href="/netclab-chart/">Helm repository</a>
-        <a href="https://pypi.org/project/netclab/">PyPI</a>
-        <a href="https://github.com/netclab/netclab-chart">Source</a>
-      </div>
-    </li>
-  </ul>
-
   <h2>Your AVD fabric, live in Kubernetes</h2>
   <ul>
+    <li>
+      <div class="name">See it, then run it</div>
+      <div class="desc">Screenshots from VS Code, and a quick start on AVD's own example with a containerlab twin.</div>
+      <div class="links">
+        <a href="/avd/">Screenshots</a>
+        <a href="/avd/#quickstart">Quick start</a>
+      </div>
+    </li>
     <li>
       <div class="name">netadopt</div>
       <div class="desc">Reads an AVD repository, reports what it holds, and writes it as Kubernetes objects — and a lab of its switches.</div>
@@ -84,6 +79,19 @@
       <div class="desc">Runs AVD in Kubernetes: builds each switch's configuration from those objects, pushes it over eAPI, and pushes it again after a change by hand.</div>
       <div class="links">
         <a href="https://github.com/netclab/function-avd">Source</a>
+      </div>
+    </li>
+  </ul>
+
+  <h2>Run a lab</h2>
+  <ul>
+    <li>
+      <div class="name">netclab-chart</div>
+      <div class="desc">Helm chart that runs routers, hosts and traffic generators as pods — cEOS, SR Linux, FRR, ixia-c — cabled together with Multus. You describe a topology; it becomes a running network. <code>netclab</code>, on PyPI, brings the cluster and the lab up in one command.</div>
+      <div class="links">
+        <a href="/netclab-chart/">Helm repository</a>
+        <a href="https://pypi.org/project/netclab/">PyPI</a>
+        <a href="https://github.com/netclab/netclab-chart">Source</a>
       </div>
     </li>
   </ul>

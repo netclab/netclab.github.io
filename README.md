@@ -3,6 +3,7 @@
 The netclab organisation site, served at **https://netclab.dev**.
 
 - `/` — the landing page, linking the projects
+- `/avd/` — an AVD fabric live in Kubernetes: screenshots and a quick start
 - `/slides/` — slide decks about them
 
 Built by GitHub Actions and published to Pages. The landing pages are
