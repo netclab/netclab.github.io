@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your AVD fabric, live in Kubernetes - netclab</title>
+<meta name="description" content="Keep the AVD model you have and the containerlab you run, and operate the model from Kubernetes.">
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #ffffff;
+    --fg: #1a1a1a;
+    --muted: #5c5c5c;
+    --rule: #e2e2e2;
+    --link: #0b5fff;
+    --code: #f4f5f6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14171a;
+      --fg: #e8e8e8;
+      --muted: #9aa0a6;
+      --rule: #2c3136;
+      --link: #7aa7ff;
+      --code: #1d2125;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 4rem 1.5rem 6rem;
+    background: var(--bg);
+    color: var(--fg);
+    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  main { max-width: 46rem; margin: 0 auto; }
+  .back { font-size: .9rem; margin: 0 0 2rem; }
+  h1 { font-size: 2.25rem; margin: 0 0 .35rem; letter-spacing: -0.02em; }
+  .tagline { color: var(--muted); margin: 0 0 2.5rem; font-size: 1.05rem; }
+  h2 {
+    font-size: .8rem; text-transform: uppercase; letter-spacing: .08em;
+    color: var(--muted); font-weight: 600;
+    margin: 3rem 0 1rem; padding-bottom: .5rem; border-bottom: 1px solid var(--rule);
+  }
+  h3 { font-size: 1.05rem; margin: 2rem 0 .5rem; }
+  /* Wider than the text, so that the text in the screenshots reads. */
+  figure { margin: 0 0 2rem; width: min(72rem, 100vw - 3rem); position: relative; left: 50%; transform: translateX(-50%); }
+  figure img { width: 100%; height: auto; display: block; border: 1px solid var(--rule); border-radius: 4px; }
+  figcaption { color: var(--muted); font-size: .9rem; margin-top: .5rem; }
+  ul.values { margin: 0; padding-left: 1.2rem; }
+  ul.values li { margin: .4rem 0; }
+  ul.things { list-style: none; margin: 0; padding: 0; }
+  ul.things li { padding: 1rem 0; border-bottom: 1px solid var(--rule); }
+  ul.things li:last-child { border-bottom: none; }
+  .name { font-weight: 600; font-size: 1.05rem; }
+  .desc { color: var(--muted); margin: .2rem 0 .5rem; }
+  .links a { margin-right: 1.1rem; font-size: .9rem; }
+  code { font: .9em ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  pre {
+    background: var(--code); border: 1px solid var(--rule); border-radius: 4px;
+    padding: .75rem 1rem; overflow-x: auto; font-size: .85rem; line-height: 1.5;
+  }
+  pre code { font-size: inherit; }
+  a { color: var(--link); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  footer { color: var(--muted); font-size: .875rem; border-top: 1px solid var(--rule); padding-top: 1.25rem; margin-top: 4rem; }
+</style>
+</head>
+<body>
+<main>
+
+  <p class="back"><a href="/">netclab</a></p>
+
+  <h1>Your AVD fabric, live in Kubernetes</h1>
+  <p class="tagline">Keep the AVD model you have and the containerlab you run. Change the model in Kubernetes, and the twin follows.</p>
+
+  <figure>
+    <a href="/avd/edit.png"><img src="/avd/edit.png" alt="VS Code: a VLAN added to the AVD model with kubectl edit, beside the containerlab twin in TopoViewer and the Fabric's objects in the Kubernetes tree" width="1920" height="1006"></a>
+    <figcaption>A VLAN added to the model, in the cluster, beside its containerlab twin.</figcaption>
+  </figure>
+  <figure>
+    <a href="/avd/crossview.png"><img src="/avd/crossview.png" alt="Crossview: the Fabric in the middle and a Device per switch around it, all healthy" width="1920" height="1006"></a>
+    <figcaption>The fabric in Kubernetes: one Fabric, a Device per switch.</figcaption>
+  </figure>
+  <figure>
+    <a href="/avd/show-vlan.png"><img src="/avd/show-vlan.png" alt="show vlan on dc1-leaf1a listing the new VLAN 3403, beside the trace of the Fabric's objects, all ready" width="1920" height="1006"></a>
+    <figcaption>Half a minute later, the VLAN is on the switch.</figcaption>
+  </figure>
+
+  <h2>What you get</h2>
+  <ul class="values">
+    <li>The AVD model as it is: your inventory, group_vars and playbook become Kubernetes objects in AVD's own data model. No new schema.</li>
+    <li>Before anything moves, <code>netadopt avd report</code> names what cannot be carried, and <code>netadopt avd compare</code> renders the repository and the objects and compares every host.</li>
+    <li>A twin cabled as AVD cables it: in containerlab, or in Kubernetes with netclab-chart.</li>
+    <li>A change to the model reaches the switches in under a minute, with no playbook to run.</li>
+    <li>A change made by hand on a switch is put back within a minute.</li>
+    <li>The twin and production run from the same objects; only the lab's extra vars differ.</li>
+  </ul>
+
+  <h2 id="quickstart">Quick start</h2>
+  <p>AVD's own <code>single-dc-l3ls</code> example: 8 cEOS switches and 2 servers in containerlab, the model in a kind cluster. Run with netadopt 0.9.0, function-avd v0.2.4, Crossplane v2.4.2, containerlab 0.79.0 and cEOS 4.36.1F.</p>
+  <p>It needs Docker, kind, kubectl, helm, <a href="https://docs.astral.sh/uv/">uv</a> and <a href="https://containerlab.dev">containerlab</a>. cEOS cannot be pulled: download it from Arista and import it once.</p>
+  <pre><code>docker import cEOS64-lab-4.36.1F.tar.xz ceos:4.36.1F</code></pre>
+
+  <h3>1. The repository</h3>
+  <pre><code>git clone --depth 1 --branch v6.4.0 --filter=blob:none --sparse https://github.com/aristanetworks/avd
+git -C avd sparse-checkout set ansible_collections/arista/avd/examples/single-dc-l3ls
+cp -r avd/ansible_collections/arista/avd/examples/single-dc-l3ls .</code></pre>
+
+  <h3>2. What is in it</h3>
+  <pre><code>uvx "netadopt[avd]" avd report single-dc-l3ls --playbook build.yml</code></pre>
+  <p>It carries: a Fabric, and a FabricInput per group.</p>
+
+  <h3>3. The twin</h3>
+  <pre><code>uvx "netadopt[avd]" avd lab single-dc-l3ls --playbook build.yml --for containerlab \
+  --ceos-image ceos:4.36.1F --extra-vars-out lab-vars.yml &gt; single-dc-l3ls.clab.yml
+sudo containerlab deploy -t single-dc-l3ls.clab.yml</code></pre>
+  <p><code>lab-vars.yml</code> points each switch of the model at its node in the twin. cEOS takes a few minutes to boot. In VS Code with <a href="https://marketplace.visualstudio.com/items?itemName=srl-labs.vscode-containerlab">vscode-containerlab</a>, one setting logs into the nodes as the twin's user:</p>
+  <pre><code>"containerlab.node.sshUserMapping": { "arista_ceos": "arista" }</code></pre>
+
+  <h3>4. The cluster</h3>
+  <pre><code>curl -LO https://raw.githubusercontent.com/netclab/function-avd/v0.2.4/example/runtime.yaml
+curl -LO https://raw.githubusercontent.com/netclab/function-avd/v0.2.4/example/providerconfig.yaml
+uvx netclab up --crossplane v2.4.2 \
+  --configuration xpkg.upbound.io/netclab/configuration-avd:v0.2.4 \
+  --manifest runtime.yaml --manifest providerconfig.yaml</code></pre>
+  <p>A kind cluster with Crossplane and function-avd, in about a minute and a half.</p>
+
+  <h3>5. The model in the cluster</h3>
+  <pre><code>uvx "netadopt[avd]" avd emit single-dc-l3ls --playbook build.yml -e @lab-vars.yml \
+  | kubectl apply --server-side -f -
+kubectl get fabric,device</code></pre>
+  <p>The Fabric and its 8 Devices are ready in under a minute, and every switch in the twin carries its AVD configuration.</p>
+
+  <h3>6. A change</h3>
+  <pre><code>KUBE_EDITOR="code --wait" kubectl edit fabricinput single-dc-l3ls-network-services</code></pre>
+  <p>Under <code>l2vlans</code>, add:</p>
+  <pre><code>- id: 3403
+  name: NEW_VLAN</code></pre>
+  <p>Save and close. Half a minute later the VLAN is on the six leaves, and not on the spines:</p>
+  <pre><code>docker exec clab-single-dc-l3ls-dc1-leaf1a Cli -p 15 -c "show vlan"</code></pre>
+
+  <h3>7. Production</h3>
+  <pre><code>uvx "netadopt[avd]" avd emit single-dc-l3ls --playbook build.yml &gt; production.yaml
+uvx "netadopt[avd]" avd emit single-dc-l3ls --playbook build.yml -e @lab-vars.yml &gt; twin.yaml
+diff production.yaml twin.yaml</code></pre>
+  <p>Only <code>spec.extraVars</code> differs. Applied without it, the Fabric configures the switches at the addresses in your inventory: read <a href="https://github.com/netclab/function-avd#before-applying-a-fabric">Before applying a Fabric</a> first.</p>
+
+  <h3>Clean up</h3>
+  <pre><code>sudo containerlab destroy -t single-dc-l3ls.clab.yml
+uvx netclab down</code></pre>
+
+  <h2>What makes it possible</h2>
+  <ul class="things">
+    <li>
+      <div class="name">netadopt</div>
+      <div class="desc">Reads an AVD repository, says what it holds, and writes it as Kubernetes objects, and a twin of its switches.</div>
+      <div class="links">
+        <a href="https://pypi.org/project/netadopt/">PyPI</a>
+        <a href="https://github.com/netclab/netadopt">Source</a>
+      </div>
+    </li>
+    <li>
+      <div class="name">function-avd</div>
+      <div class="desc">Runs AVD in Kubernetes: builds each switch's configuration from those objects with AVD's own role, pushes it over eAPI, and pushes it again after a change by hand.</div>
+      <div class="links">
+        <a href="https://github.com/netclab/function-avd">Source</a>
+      </div>
+    </li>
+    <li>
+      <div class="name">Crossplane</div>
+      <div class="desc">The Kubernetes framework the objects are reconciled with.</div>
+      <div class="links">
+        <a href="https://www.crossplane.io">crossplane.io</a>
+      </div>
+    </li>
+    <li>
+      <div class="name">containerlab and netclab-chart</div>
+      <div class="desc">The twin: containerlab on your machine, or netclab-chart in the cluster.</div>
+      <div class="links">
+        <a href="https://containerlab.dev">containerlab</a>
+        <a href="/netclab-chart/">netclab-chart</a>
+      </div>
+    </li>
+  </ul>
+
+  <footer>
+    <a href="https://github.com/netclab">github.com/netclab</a>
+  </footer>
+
+</main>
+</body>
+</html>

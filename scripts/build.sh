@@ -31,6 +31,7 @@ mkdir -p "$out/slides"
 # kept because reverting Pages to a branch is then one setting rather than a
 # setting plus remembering this file.
 cp CNAME index.html "$out/"
+cp -r avd "$out/"
 cp slides/index.html "$out/slides/"
 
 marp() { npx --yes "@marp-team/marp-cli@${MARP_VERSION}" "$@"; }

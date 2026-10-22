@@ -9,6 +9,7 @@ cost an experiment or a failed deploy to establish.
 
 ```
 index.html                  the landing page, hand-written
+avd/                        the AVD page, hand-written, and its screenshots
 slides/index.html           the index of decks, hand-written
 slides/<name>/index.md      one deck, Marp source
 scripts/build.sh            the entire build
