@@ -12,7 +12,7 @@
 # CHROME_PATH at one if it is not auto-detected.
 set -euo pipefail
 
-MARP_VERSION=4.5.0
+MARP_VERSION=4.5.1
 
 out=${1:-_site}
 root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
