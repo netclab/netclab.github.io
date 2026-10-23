@@ -44,7 +44,7 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: '22'
+          node-version: '24'
 
       # marp-cli exports PDF through a headless browser. ubuntu-latest ships
       # Chrome preinstalled, but resolving it here rather than relying on
