@@ -13,6 +13,7 @@
     --muted: #5c5c5c;
     --rule: #e2e2e2;
     --link: #0b5fff;
+    --latest: #f0f5ff;
   }
   @media (prefers-color-scheme: dark) {
     :root {
@@ -21,6 +22,7 @@
       --muted: #9aa0a6;
       --rule: #2c3136;
       --link: #7aa7ff;
+      --latest: #1a2333;
     }
   }
   * { box-sizing: border-box; }
@@ -45,6 +47,13 @@
   .name { font-weight: 600; font-size: 1.05rem; }
   .desc { color: var(--muted); margin: .2rem 0 .5rem; }
   .links a { margin-right: 1.1rem; font-size: .9rem; }
+  /* The latest work, as cards above the index of things. */
+  h2.latest { color: var(--link); border-bottom-color: var(--link); }
+  ul.latest li {
+    background: var(--latest); border: none; border-left: 3px solid var(--link);
+    border-radius: 4px; padding: 1rem 1.25rem; margin-bottom: .75rem;
+  }
+  ul.latest .name { font-size: 1.15rem; }
   a { color: var(--link); text-decoration: none; }
   a:hover { text-decoration: underline; }
   footer { color: var(--muted); font-size: .875rem; border-top: 1px solid var(--rule); padding-top: 1.25rem; }
@@ -56,16 +65,28 @@
   <h1>netclab</h1>
   <p class="tagline">Network labs on Kubernetes, and the tooling that configures them.</p>
 
-  <h2>Your AVD fabric, live in Kubernetes</h2>
-  <ul>
+  <h2 class="latest">Latest</h2>
+  <ul class="latest">
     <li>
-      <div class="name">See it, then run it</div>
-      <div class="desc">Screenshots from VS Code, and a quick start on AVD's own example with a containerlab twin.</div>
+      <div class="name">Post-quantum IPsec on IOS XE, from Kubernetes</div>
+      <div class="desc">An IPsec tunnel between Cisco routers with a post-quantum preshared key mixed into IKEv2, as Kubernetes objects kept on the routers by reconcile. The exercise is from Cisco's IPsec blog series.</div>
+      <div class="links">
+        <a href="/netclab-xp/iosxe/">Read</a>
+        <a href="/netclab-xp/iosxe/#quick-start">Quick start</a>
+      </div>
+    </li>
+    <li>
+      <div class="name">Your AVD fabric, live in Kubernetes</div>
+      <div class="desc">Keep the AVD model you have and the containerlab you run, and operate the model from Kubernetes.</div>
       <div class="links">
         <a href="/avd/">Screenshots</a>
         <a href="/avd/#quickstart">Quick start</a>
       </div>
     </li>
+  </ul>
+
+  <h2>AVD in Kubernetes</h2>
+  <ul>
     <li>
       <div class="name">netadopt</div>
       <div class="desc">Reads an AVD repository, reports what it holds, and writes it as Kubernetes objects — and a lab of its switches.</div>
@@ -100,7 +121,7 @@
   <ul>
     <li>
       <div class="name">netclab-xp</div>
-      <div class="desc">Crossplane package that turns router configuration into Kubernetes resources — from a single interface up to a whole router, over RESTCONF, JSON-RPC or eAPI.</div>
+      <div class="desc">Crossplane packages that turn router configuration into Kubernetes resources: configuration-eos for Arista EOS, from a single interface up to a whole router, over RESTCONF, JSON-RPC or eAPI, and configuration-iosxe for Cisco IOS XE over RESTCONF.</div>
       <div class="links">
         <a href="/netclab-xp/">Documentation</a>
         <a href="https://github.com/netclab/netclab-xp">Source</a>
