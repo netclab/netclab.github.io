@@ -54,6 +54,9 @@
     border-radius: 4px; padding: 1rem 1.25rem; margin-bottom: .75rem;
   }
   ul.latest .name { font-size: 1.15rem; }
+  /* What a card's subject does, under its description. */
+  ul.points { list-style: disc; margin: .2rem 0 .6rem; padding-left: 1.2rem; color: var(--muted); }
+  ul.latest ul.points li { background: none; border: none; border-radius: 0; padding: .1rem 0; margin: 0; }
   a { color: var(--link); text-decoration: none; }
   a:hover { text-decoration: underline; }
   footer { color: var(--muted); font-size: .875rem; border-top: 1px solid var(--rule); padding-top: 1.25rem; }
@@ -68,16 +71,29 @@
   <h2 class="latest">Latest</h2>
   <ul class="latest">
     <li>
-      <div class="name">Post-quantum IPsec on IOS XE, from Kubernetes</div>
-      <div class="desc">An IPsec tunnel between Cisco routers with a post-quantum preshared key mixed into IKEv2, as Kubernetes objects kept on the routers by reconcile. The exercise is from Cisco's IPsec blog series.</div>
+      <div class="name">IPsec on Cisco IOS XE, from Kubernetes</div>
+      <div class="desc">Each section of a router's IPsec configuration is a Kubernetes object, kept on the router by reconcile, with the router's state read back into it.</div>
+      <ul class="points">
+        <li>tunnels with a post-quantum preshared key (PPK)</li>
+        <li>overlays of static VTIs, in a front-door VRF and a VRF of their own</li>
+        <li>keys rotated from their Secrets, on both ends</li>
+        <li>brownfield adoption: observed first, written when you choose</li>
+      </ul>
       <div class="links">
         <a href="/netclab-xp/iosxe/">Read</a>
         <a href="/netclab-xp/iosxe/#quick-start">Quick start</a>
+        <a href="/netclab-xp/iosxe/adopt/">Adopt a router</a>
       </div>
     </li>
     <li>
       <div class="name">Your AVD fabric, live in Kubernetes</div>
-      <div class="desc">Keep the AVD model you have and the containerlab you run, and operate the model from Kubernetes.</div>
+      <div class="desc">Keep the AVD model you have and the lab you run, and operate the model from Kubernetes.</div>
+      <ul class="points">
+        <li>an AVD repository read as it is, reported on, and written as Kubernetes objects</li>
+        <li>AVD run in the cluster, each switch's configuration pushed over eAPI</li>
+        <li>a change made by hand on a switch put back by reconcile</li>
+        <li>a lab twin of the switches, in containerlab or with netclab-chart</li>
+      </ul>
       <div class="links">
         <a href="/avd/">Screenshots</a>
         <a href="/avd/#quickstart">Quick start</a>
