@@ -30,7 +30,7 @@ mkdir -p "$out/slides"
 # deployed artifact is served as-is, so in this build it would be inert. It is
 # kept because reverting Pages to a branch is then one setting rather than a
 # setting plus remembering this file.
-cp CNAME index.html "$out/"
+cp CNAME index.html favicon.ico icon.svg apple-touch-icon.png logo.svg logo-dark.svg "$out/"
 cp -r avd "$out/"
 cp slides/index.html "$out/slides/"
 

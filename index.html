@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>netclab</title>
 <meta name="description" content="Networks operated from Kubernetes and Crossplane, from one tunnel to a whole fabric's design. Lab twins to try each change on first.">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <style>
   :root {
     color-scheme: light dark;
@@ -35,6 +38,7 @@
   }
   main { max-width: 46rem; margin: 0 auto; }
   h1 { font-size: 2.25rem; margin: 0 0 .35rem; letter-spacing: -0.02em; }
+  h1 img { display: block; height: 2.5rem; width: auto; }
   .tagline { color: var(--muted); margin: 0 0 3rem; font-size: 1.05rem; }
   h2 {
     font-size: .8rem; text-transform: uppercase; letter-spacing: .08em;
@@ -60,12 +64,18 @@
   a { color: var(--link); text-decoration: none; }
   a:hover { text-decoration: underline; }
   footer { color: var(--muted); font-size: .875rem; border-top: 1px solid var(--rule); padding-top: 1.25rem; }
+  footer p { margin: 0 0 .35rem; }
 </style>
 </head>
 <body>
 <main>
 
-  <h1>netclab</h1>
+  <h1>
+    <picture>
+      <source srcset="/logo-dark.svg" media="(prefers-color-scheme: dark)">
+      <img src="/logo.svg" alt="netclab" width="182" height="40">
+    </picture>
+  </h1>
   <p class="tagline">Networks operated from Kubernetes and Crossplane, from one tunnel to a whole fabric's design. Lab twins to try each change on first.</p>
 
   <h2 class="latest">Latest</h2>
@@ -156,7 +166,7 @@
   <ul>
     <li>
       <div class="name">Slides</div>
-      <div class="desc">Two decks: netclab-xp's resources, one setting and one router at a time, and an AVD fabric live in Kubernetes.</div>
+      <div class="desc">Three decks: netclab-xp's resources, one setting and one router at a time; an AVD fabric live in Kubernetes; and IPsec on Cisco IOS XE.</div>
       <div class="links">
         <a href="/slides/">Slides</a>
       </div>
@@ -164,7 +174,8 @@
   </ul>
 
   <footer>
-    <a href="https://github.com/netclab">github.com/netclab</a>
+    <p>APIs are <code>v1alpha1</code> and may change.</p>
+    <p>Questions: <a href="https://github.com/orgs/netclab/discussions">GitHub Discussions</a> &middot; Source: <a href="https://github.com/netclab">github.com/netclab</a></p>
   </footer>
 
 </main>
