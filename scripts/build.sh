@@ -36,6 +36,12 @@ cp slides/index.html "$out/slides/"
 
 marp() { npx --yes "@marp-team/marp-cli@${MARP_VERSION}" "$@"; }
 
+# The same icons as the static pages. Marp has no option for <head>, so they are
+# put in after rendering.
+icons='<link rel="icon" href="/favicon.ico" sizes="32x32">'
+icons+='<link rel="icon" href="/icon.svg" type="image/svg+xml">'
+icons+='<link rel="apple-touch-icon" href="/apple-touch-icon.png">'
+
 for src in slides/*/index.md; do
   deck=$(basename "$(dirname "$src")")
   mkdir -p "$out/slides/$deck"
@@ -43,6 +49,9 @@ for src in slides/*/index.md; do
   # --html: the decks use inline <br> and <span style> for layout, which Marp
   # strips unless raw HTML is allowed.
   marp --html "$src" -o "$out/slides/$deck/index.html"
+  sed -i "s#</head>#${icons}</head>#" "$out/slides/$deck/index.html"
+  grep -q 'href="/icon.svg"' "$out/slides/$deck/index.html" \
+    || { echo "FATAL: no icons in $deck" >&2; exit 1; }
   marp --html "$src" --pdf -o "$out/slides/$deck/$deck.pdf"
 done
 
