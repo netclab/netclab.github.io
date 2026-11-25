@@ -60,7 +60,7 @@
   ul.latest .name { font-size: 1.15rem; }
   /* What a card's subject does, under its description. */
   ul.points { list-style: disc; margin: .2rem 0 .6rem; padding-left: 1.2rem; color: var(--muted); }
-  ul.latest ul.points li { background: none; border: none; border-radius: 0; padding: .1rem 0; margin: 0; }
+  ul.points li { background: none; border: none; border-radius: 0; padding: .1rem 0; margin: 0; }
   a { color: var(--link); text-decoration: none; }
   a:hover { text-decoration: underline; }
   footer { color: var(--muted); font-size: .875rem; border-top: 1px solid var(--rule); padding-top: 1.25rem; }
@@ -81,6 +81,21 @@
   <h2 class="latest">Latest</h2>
   <ul class="latest">
     <li>
+      <div class="name">Site-to-Site VPN to AWS, from Kubernetes</div>
+      <div class="desc">One Kubernetes object makes the VPN connection on AWS and both tunnels on a Cisco IOS XE router, keeps them by reconcile, and shows both sides in its status.</div>
+      <ul class="points">
+        <li>AWS's recommended settings, from its sample configuration</li>
+        <li>keys rotated one tunnel at a time, the other carrying traffic</li>
+        <li>the router's other VPNs left alone</li>
+        <li>tunnel and BGP state from the router</li>
+      </ul>
+      <div class="links">
+        <a href="/netclab-xp/aws-vpn/">Read</a>
+        <a href="/netclab-xp/aws-vpn/#quick-start">Quick start</a>
+        <a href="/netclab-xp/aws-vpn/keys/">Rotate keys</a>
+      </div>
+    </li>
+    <li>
       <div class="name">IPsec on Cisco IOS XE, from Kubernetes</div>
       <div class="desc">Each section of a router's IPsec configuration is a Kubernetes object, kept on the router by reconcile, with the router's state read back into it.</div>
       <ul class="points">
@@ -95,6 +110,10 @@
         <a href="/netclab-xp/iosxe/adopt/">Adopt a router</a>
       </div>
     </li>
+  </ul>
+
+  <h2>AVD in Kubernetes</h2>
+  <ul>
     <li>
       <div class="name">Your AVD fabric, live in Kubernetes</div>
       <div class="desc">Keep the AVD model you have and the lab you run, and operate the model from Kubernetes.</div>
@@ -109,10 +128,6 @@
         <a href="/avd/#quickstart">Quick start</a>
       </div>
     </li>
-  </ul>
-
-  <h2>AVD in Kubernetes</h2>
-  <ul>
     <li>
       <div class="name">netadopt</div>
       <div class="desc">Reads an AVD repository, reports what it holds, and writes it as Kubernetes objects, and a lab of its switches.</div>
@@ -147,7 +162,7 @@
   <ul>
     <li>
       <div class="name">netclab-xp</div>
-      <div class="desc">Crossplane packages that turn router configuration into Kubernetes resources: configuration-eos for Arista EOS, from a single interface up to a whole router, over RESTCONF, JSON-RPC or eAPI, and configuration-iosxe for Cisco IOS XE over RESTCONF.</div>
+      <div class="desc">Crossplane packages that turn router configuration into Kubernetes resources: configuration-eos for Arista EOS, from a single interface up to a whole router, over RESTCONF, JSON-RPC or eAPI, configuration-iosxe for Cisco IOS XE over RESTCONF, and configuration-aws-vpn for a Site-to-Site VPN between AWS and IOS XE.</div>
       <div class="links">
         <a href="/netclab-xp/">Documentation</a>
         <a href="https://github.com/netclab/netclab-xp">Source</a>
