@@ -2,14 +2,14 @@
 marp: true
 theme: default
 author: Michal Bakalarski
-title: IPsec on Cisco IOS XE, from Kubernetes
+title: IPsec on Cisco IOS XE, managed from Kubernetes
 keywords: kubernetes,crossplane,cisco,iosxe,ipsec,ikev2,ppk,rfc8784,vti,vrf,restconf,yang,brownfield,gitops,netdevops,networkautomation,netclab,configuration-iosxe
 paginate: true
 backgroundColor: '#1E293B'  # dark slate
 color: '#F8FAFC'            # light text
 ---
 
-# IPsec on Cisco IOS XE, from Kubernetes
+# IPsec on Cisco IOS XE, managed from Kubernetes
 *[**configuration-iosxe**](https://github.com/netclab/netclab-xp) 0.2.0, powered by [crossplane.io](https://www.crossplane.io)*
 <br>
 
