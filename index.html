@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>netclab</title>
-<meta name="description" content="Networks operated from Kubernetes and Crossplane, from one tunnel to a whole fabric's design. Lab twins to try each change on first.">
+<meta name="description" content="Network automation that leaves the engineer free: one problem at a time, starting from the configuration already on the devices, with what is learned kept in packages owned and released by the team.">
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -12,11 +12,15 @@
   :root {
     color-scheme: light dark;
     --bg: #ffffff;
-    --fg: #1a1a1a;
-    --muted: #5c5c5c;
-    --rule: #e2e2e2;
-    --link: #0b5fff;
-    --latest: #f0f5ff;
+    --fg: #14181d;
+    --muted: #59606a;
+    --rule: #e3e6ea;
+    --change: #0b5fff;      /* the change loop: Git and pull requests */
+    --reconcile: #0d8a6a;   /* the reconcile loop: Crossplane, every poll */
+    --reconcile-tint: #eaf6f1;
+    --code-bg: #f4f5f7;
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   }
   @media (prefers-color-scheme: dark) {
     :root {
@@ -24,45 +28,120 @@
       --fg: #e8e8e8;
       --muted: #9aa0a6;
       --rule: #2c3136;
-      --link: #7aa7ff;
-      --latest: #1a2333;
+      --change: #7aa7ff;
+      --reconcile: #4cc9a6;
+      --reconcile-tint: #14261f;
+      --code-bg: #1c2024;
     }
   }
   * { box-sizing: border-box; }
   body {
     margin: 0;
-    padding: 4rem 1.5rem 6rem;
     background: var(--bg);
     color: var(--fg);
-    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font: 16px/1.6 var(--font);
+    padding: 0 max(16px, env(safe-area-inset-right, 0px)) 5rem max(16px, env(safe-area-inset-left, 0px));
   }
-  main { max-width: 46rem; margin: 0 auto; }
-  h1 { font-size: 2.25rem; margin: 0 0 .35rem; letter-spacing: -0.02em; }
-  h1 img { display: block; height: 2.5rem; width: auto; }
-  .tagline { color: var(--muted); margin: 0 0 3rem; font-size: 1.05rem; }
-  h2 {
-    font-size: .8rem; text-transform: uppercase; letter-spacing: .08em;
-    color: var(--muted); font-weight: 600;
-    margin: 0 0 1rem; padding-bottom: .5rem; border-bottom: 1px solid var(--rule);
-  }
-  ul { list-style: none; margin: 0 0 3rem; padding: 0; }
-  li { padding: 1rem 0; border-bottom: 1px solid var(--rule); }
-  li:last-child { border-bottom: none; }
-  .name { font-weight: 600; font-size: 1.05rem; }
-  .desc { color: var(--muted); margin: .2rem 0 .5rem; }
-  .links a { margin-right: 1.1rem; font-size: .9rem; }
-  /* The latest work, as cards above the index of things. */
-  h2.latest { color: var(--link); border-bottom-color: var(--link); }
-  ul.latest li {
-    background: var(--latest); border: none; border-left: 3px solid var(--link);
-    border-radius: 4px; padding: 1rem 1.25rem; margin-bottom: .75rem;
-  }
-  ul.latest .name { font-size: 1.15rem; }
-  /* What a card's subject does, under its description. */
-  ul.points { list-style: disc; margin: .2rem 0 .6rem; padding-left: 1.2rem; color: var(--muted); }
-  ul.points li { background: none; border: none; border-radius: 0; padding: .1rem 0; margin: 0; }
-  a { color: var(--link); text-decoration: none; }
+  main { max-width: 46rem; margin: 0 auto; padding-top: 4rem; }
+  a { color: var(--change); text-decoration: none; }
   a:hover { text-decoration: underline; }
+  a:focus-visible { outline: 2px solid var(--change); outline-offset: 2px; border-radius: 2px; }
+  code { font-family: var(--mono); font-size: .9em; background: var(--code-bg); padding: .05em .35em; border-radius: 3px; }
+
+  .logo { display: block; margin-bottom: 2.5rem; }
+  .logo img { display: block; height: 2.5rem; width: auto; }
+  h1 { font-size: 2.4rem; line-height: 1.15; letter-spacing: -0.025em; margin: 0 0 1rem; text-wrap: balance; }
+  .lede { font-size: 1.15rem; color: var(--muted); margin: 0 0 1.5rem; max-width: 40rem; }
+  .cta { display: flex; flex-wrap: wrap; gap: .75rem; margin-bottom: 2rem; }
+  .cta a { padding: .5rem 1rem; border-radius: 4px; border: 1px solid var(--change); font-weight: 600; font-size: .95rem; }
+  .cta a.primary { background: var(--change); color: var(--bg); }
+
+  /* The parts of the story, stuck to the top once scrolled to; the current one marked. */
+  nav.parts {
+    position: sticky; top: 0; z-index: 5;
+    background: var(--bg); border-bottom: 1px solid var(--rule);
+    display: flex; flex-wrap: wrap; gap: .25rem 1.5rem; padding: .7rem 0;
+    font-size: .8rem; text-transform: uppercase; letter-spacing: .1em; font-weight: 600;
+  }
+  nav.parts a { color: var(--muted); padding: .15rem 0; border-bottom: 2px solid transparent; }
+  nav.parts a:hover { color: var(--fg); text-decoration: none; }
+  nav.parts a.current { color: var(--fg); border-bottom-color: var(--change); }
+  /* The index is no part of the story: apart, on the right. */
+  nav.parts a.aside { margin-left: auto; display: inline-flex; align-items: center; }
+  nav.parts a.aside::before {
+    content: ""; width: 1px; height: 1em; background: var(--muted); opacity: .5; margin-right: 1.5rem;
+  }
+
+  /* Every section opens on a full rule: one h2 per section, h3 for its parts. */
+  section { border-top: 1px solid var(--rule); padding-top: 2.75rem; margin: 0 0 4rem; }
+  /* A jump lands every section the same way: its rule hidden under the bar, its label the same distance below. */
+  section { scroll-margin-top: calc(var(--nav-h, 3.2rem) - 2px); }
+  nav.parts + section { border-top-color: transparent; }
+  h2 { font-size: 1.8rem; letter-spacing: -0.02em; line-height: 1.2; margin: 0 0 1.25rem; text-wrap: balance; }
+  h3 { font-size: 1.1rem; line-height: 1.3; margin: 0 0 .4rem; }
+  section > h3 { margin-top: 3rem; }
+  /* The part of the story a section belongs to (why, how, proof, your turn), on the right of its title. */
+  section { position: relative; }
+  .part {
+    position: absolute; right: 0; top: 3.2rem;
+    font-size: .75rem; line-height: 1.2rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); font-weight: 600;
+  }
+  .part + h2 { padding-right: 7rem; }
+  p { margin: 0 0 1rem; }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+  .pair > div { min-width: 0; }
+  @media (max-width: 640px) { .pair { grid-template-columns: 1fr; gap: 0; } h1 { font-size: 1.9rem; } }
+
+  .diagram { overflow-x: auto; margin: 2rem 0; }
+  .diagram svg { display: block; width: 100%; min-width: 620px; height: auto; }
+  svg text { font-family: var(--font); fill: var(--fg); }
+  svg .muted { fill: var(--muted); }
+  svg .t-change { fill: var(--change); }
+  svg .t-reconcile { fill: var(--reconcile); }
+  svg .box { fill: var(--bg); stroke: var(--fg); stroke-width: 1.5; }
+  svg .box-object { fill: var(--bg); stroke: var(--fg); stroke-width: 2; }
+  svg .l-change { fill: none; stroke: var(--change); stroke-width: 2.5; }
+  svg .l-reconcile { fill: none; stroke: var(--reconcile); stroke-width: 2.5; }
+  svg .h-change { fill: var(--change); }
+  svg .h-reconcile { fill: var(--reconcile); }
+  svg .step-observe { fill: var(--bg); stroke: var(--reconcile); stroke-width: 1.5; stroke-dasharray: 5 4; }
+  svg .step-merge { fill: var(--bg); stroke: var(--reconcile); stroke-width: 1.5; }
+  svg .step-replace { fill: var(--reconcile-tint); stroke: var(--reconcile); stroke-width: 2; }
+  svg .plain { fill: none; stroke: var(--muted); stroke-width: 1.5; }
+  svg .h-plain { fill: var(--muted); }
+
+  .points { list-style: none; padding: 0; margin: 0 0 1rem; display: grid; gap: .6rem; }
+  .points li { padding-left: 1rem; border-left: 3px solid var(--rule); }
+  .points li.c { border-left-color: var(--change); }
+  .points li.r { border-left-color: var(--reconcile); }
+
+  .table-wrap { overflow-x: auto; margin: 1.5rem 0; }
+  table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+  th { text-align: left; font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; padding: .4rem .6rem .4rem 0; border-bottom: 1px solid var(--rule); }
+  td { padding: .55rem .6rem .55rem 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  td:first-child { width: 45%; }
+  tr:last-child td { border-bottom: none; }
+
+  pre { background: var(--code-bg); padding: .8rem 1rem; border-radius: 4px; overflow-x: auto; font: .9rem/1.5 var(--mono); margin: 0 0 1rem; }
+  pre.yaml { font-size: .85rem; line-height: 1.45; }
+  .k-spec { color: var(--change); font-weight: 700; }
+  .k-status { color: var(--reconcile); font-weight: 700; }
+  .cm { color: var(--muted); }
+
+  .cards { display: grid; gap: 1rem; }
+  .card { border: 1px solid var(--rule); border-radius: 6px; padding: 1.1rem 1.25rem; }
+  .card p { color: var(--muted); margin: 0 0 .5rem; }
+  .card ul { margin: 0 0 .6rem; padding-left: 1.1rem; }
+  .card li { margin: .15rem 0; }
+  .shows { font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; margin: .4rem 0 .2rem; }
+  .links { display: flex; flex-wrap: wrap; gap: 1.1rem; font-size: .9rem; }
+
+  .index { list-style: none; margin: 0; padding: 0; }
+  .index li { padding: .75rem 0; border-bottom: 1px solid var(--rule); }
+  .index li:last-child { border-bottom: none; }
+  .index .name { font-weight: 600; }
+  .index .desc { color: var(--muted); margin: .1rem 0 .3rem; }
+
   footer { color: var(--muted); font-size: .875rem; border-top: 1px solid var(--rule); padding-top: 1.25rem; }
   footer p { margin: 0 0 .35rem; }
 </style>
@@ -70,123 +149,378 @@
 <body>
 <main>
 
-  <h1>
+  <div class="logo">
     <picture>
       <source srcset="/logo-dark.svg" media="(prefers-color-scheme: dark)">
       <img src="/logo.svg" alt="netclab" width="182" height="40">
     </picture>
-  </h1>
-  <p class="tagline">Networks operated from Kubernetes and Crossplane, from one tunnel to a whole fabric's design. Lab twins to try each change on first.</p>
+  </div>
 
-  <h2 class="latest">Latest</h2>
-  <ul class="latest">
-    <li>
-      <div class="name">Site-to-Site VPN from Cisco IOS XE to AWS, managed from Kubernetes</div>
-      <div class="desc">One Kubernetes object makes the VPN connection on AWS and both tunnels on a Cisco IOS XE router, keeps them by reconcile, and shows both sides in its status.</div>
-      <ul class="points">
-        <li>AWS's recommended settings, from its sample configuration</li>
-        <li>keys rotated one tunnel at a time, the other carrying traffic</li>
-        <li>the router's other VPNs left alone</li>
-        <li>tunnel and BGP state from the router</li>
-      </ul>
-      <div class="links">
-        <a href="/netclab-xp/aws-vpn/">Read</a>
-        <a href="/netclab-xp/aws-vpn/#quick-start">Quick start</a>
-        <a href="/netclab-xp/aws-vpn/keys/">Rotate keys</a>
-      </div>
-    </li>
-    <li>
-      <div class="name">IPsec on Cisco IOS XE, managed from Kubernetes</div>
-      <div class="desc">Each section of a router's IPsec configuration is a Kubernetes object, kept on the router by reconcile, with the router's state read back into it.</div>
-      <ul class="points">
-        <li>tunnels with a post-quantum preshared key (PPK)</li>
-        <li>overlays of static VTIs, in a front-door VRF and a VRF of their own</li>
-        <li>keys rotated from their Secrets, on both ends</li>
-        <li>brownfield adoption: observed first, written when you choose</li>
-      </ul>
-      <div class="links">
-        <a href="/netclab-xp/iosxe/">Read</a>
-        <a href="/netclab-xp/iosxe/#quick-start">Quick start</a>
-        <a href="/netclab-xp/iosxe/adopt/">Adopt a router</a>
-      </div>
-    </li>
-  </ul>
+  <h1>Network automation that leaves the engineer free.</h1>
+  <p class="lede">An NMS decides what you can automate, and when. This method lets you decide: one problem at a time, starting from the configuration already on your devices, with what you learn kept in packages you own and release.</p>
+  <div class="cta">
+    <a class="primary" href="#examples">See it on real problems</a>
+  </div>
 
-  <h2>AVD in Kubernetes</h2>
-  <ul>
-    <li>
-      <div class="name">Your AVD fabric, live in Kubernetes</div>
-      <div class="desc">Keep the AVD model you have and the lab you run, and operate the model from Kubernetes.</div>
-      <ul class="points">
-        <li>an AVD repository read as it is, reported on, and written as Kubernetes objects</li>
-        <li>AVD run in the cluster, each switch's configuration pushed over eAPI</li>
-        <li>a change made by hand on a switch put back by reconcile</li>
-        <li>a lab twin of the switches, in containerlab or with netclab-chart</li>
-      </ul>
-      <div class="links">
-        <a href="/avd/">Screenshots</a>
-        <a href="/avd/#quickstart">Quick start</a>
-      </div>
-    </li>
-    <li>
-      <div class="name">netadopt</div>
-      <div class="desc">Reads an AVD repository, reports what it holds, and writes it as Kubernetes objects, and a lab of its switches.</div>
-      <div class="links">
-        <a href="https://pypi.org/project/netadopt/">PyPI</a>
-        <a href="https://github.com/netclab/netadopt">Source</a>
-      </div>
-    </li>
-    <li>
-      <div class="name">function-avd</div>
-      <div class="desc">Runs AVD in Kubernetes: builds each switch's configuration from those objects, pushes it over eAPI, and pushes it again after a change by hand.</div>
-      <div class="links">
-        <a href="https://github.com/netclab/function-avd">Source</a>
-      </div>
-    </li>
-  </ul>
+  <nav class="parts" aria-label="Parts of the page">
+    <a href="#why">Why</a>
+    <a href="#method">How</a>
+    <a href="#examples">Proof</a>
+    <a href="#your-turn">Your turn</a>
+    <a class="aside" href="#everything">Everything here</a>
+  </nav>
 
-  <h2>Run a lab</h2>
-  <ul>
-    <li>
-      <div class="name">netclab-chart</div>
-      <div class="desc">Helm chart that runs routers, hosts and traffic generators as pods (cEOS, SR Linux, FRR, ixia-c), cabled together with Multus. You describe a topology; it becomes a running network. <code>netclab</code>, on PyPI, brings the cluster and the lab up in one command.</div>
-      <div class="links">
-        <a href="/netclab-chart/">Helm repository</a>
-        <a href="https://pypi.org/project/netclab/">PyPI</a>
-        <a href="https://github.com/netclab/netclab-chart">Source</a>
+  <section id="why" data-part="why">
+    <div class="part">Why</div>
+    <h2>Two problems you know</h2>
+    <div class="pair">
+      <div>
+        <h3>Automation that does not stay</h3>
+        <p>Configuration drifts. Scripts push once and walk away, and nothing tells you whether what they sent still holds.</p>
       </div>
-    </li>
-  </ul>
+      <div>
+        <h3>What you know has nowhere to live</h3>
+        <p>What makes the network work is what you know. The setting the YANG does not model. The write the router refuses while another is in progress. The new key that does nothing until the SA is cleared. All of it lives only in your head, a wiki or a post-incident note, and you are the one who has to remember it, every time.</p>
+      </div>
+    </div>
+    <p>The answer on offer to both is an NMS: the vendor automates what it chose to support, encodes what network engineers know, and sells it back to you, late.</p>
+  </section>
 
-  <h2>Configure devices</h2>
-  <ul>
-    <li>
-      <div class="name">netclab-xp</div>
-      <div class="desc">Crossplane packages that turn router configuration into Kubernetes resources: configuration-eos for Arista EOS, from a single interface up to a whole router, over RESTCONF, JSON-RPC or eAPI, configuration-iosxe for Cisco IOS XE over RESTCONF, and configuration-aws-vpn for a Site-to-Site VPN between AWS and IOS XE.</div>
-      <div class="links">
-        <a href="/netclab-xp/">Documentation</a>
-        <a href="https://github.com/netclab/netclab-xp">Source</a>
+  <section data-part="why">
+    <div class="part">Why</div>
+    <h2>Computing solved this years ago</h2>
+    <div class="pair">
+      <div>
+        <h3>How computing does it</h3>
+        <p>Write down what should be there, let a control loop keep it there, and change it through Git. Servers, cloud and applications have run this way for more than a decade. What a human operator knows went into software that does the work.</p>
       </div>
-    </li>
-    <li>
-      <div class="name">function-eapi</div>
-      <div class="desc">Turns EOS CLI configuration into resources applied to devices over JSON-RPC.</div>
-      <div class="links">
-        <a href="https://github.com/netclab/function-eapi">Source</a>
+      <div>
+        <h3>Why networks were left out</h3>
+        <p>A router is not a container. You cannot throw it away and start a fresh one. It holds a configuration somebody wrote by hand, and its vendor decides how it can be reached.</p>
       </div>
-    </li>
-  </ul>
+    </div>
+  </section>
 
-  <h2>Reading</h2>
-  <ul>
-    <li>
-      <div class="name">Slides</div>
-      <div class="desc">Three decks: netclab-xp's resources, one setting and one router at a time; an AVD fabric live in Kubernetes; and IPsec on Cisco IOS XE.</div>
-      <div class="links">
-        <a href="/slides/">Slides</a>
+  <section id="method" data-part="method">
+    <div class="part">How</div>
+    <h2>The method: the same loop, for devices as they are</h2>
+    <p>Each section of a device's configuration becomes an object. Two loops meet on it.</p>
+
+    <div class="diagram">
+      <svg viewBox="0 0 760 300" role="img" aria-labelledby="loops-title">
+        <title id="loops-title">Two loops meet on one object: the change loop between Git and the object's spec, and the reconcile loop between the object's status and the router.</title>
+        <defs>
+          <marker id="hc" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="h-change" d="M0,0 L10,5 L0,10 z"/></marker>
+          <marker id="hr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="h-reconcile" d="M0,0 L10,5 L0,10 z"/></marker>
+        </defs>
+
+        <text x="195" y="18" text-anchor="middle" font-size="15" font-weight="700" class="t-change">Change loop</text>
+        <text x="565" y="18" text-anchor="middle" font-size="15" font-weight="700" class="t-reconcile">Reconcile loop</text>
+
+        <path class="l-change" d="M 110 118 C 125 48, 245 48, 282 88" marker-end="url(#hc)"/>
+        <path class="l-change" d="M 282 212 C 245 252, 125 252, 110 184" marker-end="url(#hc)"/>
+        <path class="l-reconcile" d="M 478 88 C 515 48, 635 48, 650 116" marker-end="url(#hr)"/>
+        <path class="l-reconcile" d="M 650 182 C 635 252, 515 252, 478 212" marker-end="url(#hr)"/>
+
+        <text x="195" y="44" text-anchor="middle" font-size="13" class="t-change">merged pull request</text>
+        <text x="195" y="272" text-anchor="middle" font-size="13" class="t-change">you read the status, open the next one</text>
+        <text x="565" y="44" text-anchor="middle" font-size="13" class="t-reconcile">write what differs</text>
+        <text x="565" y="272" text-anchor="middle" font-size="13" class="t-reconcile">read config and operational state</text>
+        <text x="195" y="293" text-anchor="middle" font-size="12" class="muted">you, one pull request at a time</text>
+        <text x="565" y="293" text-anchor="middle" font-size="12" class="muted">Crossplane, every poll</text>
+
+        <rect class="box" x="20" y="118" width="130" height="64" rx="8"/>
+        <text x="85" y="146" text-anchor="middle" font-size="15" font-weight="700">Git</text>
+        <text x="85" y="166" text-anchor="middle" font-size="12" class="muted">your intent, in YAML</text>
+
+        <rect class="box" x="610" y="118" width="130" height="64" rx="8"/>
+        <text x="675" y="146" text-anchor="middle" font-size="15" font-weight="700">router</text>
+        <text x="675" y="166" text-anchor="middle" font-size="12" class="muted">as it really is</text>
+
+        <rect class="box-object" x="255" y="88" width="250" height="124" rx="10"/>
+        <text x="275" y="114" font-size="15" font-weight="700">object</text>
+        <text x="275" y="142" font-size="13" font-weight="700" class="t-change">spec</text>
+        <text x="327" y="142" font-size="13">what should be there</text>
+        <text x="275" y="168" font-size="13" font-weight="700" class="t-reconcile">status</text>
+        <text x="327" y="168" font-size="13">what the router has,</text>
+        <text x="327" y="186" font-size="13">the drift, whether it works</text>
+      </svg>
+    </div>
+
+    <ul class="points">
+      <li class="c">You change the spec through Git, as a pull request. Review, history and rollback come with it.</li>
+      <li class="r">Crossplane reads the router into the status on every poll and writes back what differs. A change made by hand is put back.</li>
+      <li class="r">The status says whether it works, not only what was sent: the tunnel's interface, its SA, the BGP session. A next step can wait on it.</li>
+      <li>Try every change on a twin first: the same objects against a lab of the same devices, on your laptop.</li>
+    </ul>
+
+    <p>The same on one real object, a tunnel interface on Cisco IOS XE, shortened:</p>
+<pre class="yaml">kind: TunnelInterface
+metadata:
+  name: r1--tunnel0--d311cfe5
+<span class="k-spec">spec:</span>                            <span class="cm"># what should be there: yours, through Git</span>
+  managementPolicy: Replace
+  deviceRef: {name: r1}
+  name: Tunnel0
+  mode: ipsec-ipv4
+  ipv4Address: 192.168.100.1/24
+  source: GigabitEthernet2
+  destination: 10.0.23.2
+  ipsecProfile: CLASSICAL-IPSEC
+<span class="k-status">status:</span>                          <span class="cm"># read from the router on every poll</span>
+  <span class="k-status">observed:</span>                      <span class="cm"># the section as the router holds it</span>
+    destination: 10.0.23.2
+    ipsecProfile: CLASSICAL-IPSEC
+    ipv4Address: 192.168.100.1/24
+    mode: ipsec-ipv4
+    source: GigabitEthernet2
+  <span class="k-status">drift:</span> []                      <span class="cm"># nothing differs from the spec</span>
+  <span class="k-status">oper:</span>                          <span class="cm"># whether it works</span>
+    interface: ready
+    peers:
+    - address: 10.0.23.2
+      ikeSA: active
+  <span class="k-status">reverted:</span>                      <span class="cm"># a description added by hand, taken off</span>
+    extra:
+    - field: description
+      device: ['"by hand"']</pre>
+
+    <h3>Observe before writing</h3>
+    <p>A router configured by hand is taken over one section at a time. Nothing is written until you move a section up.</p>
+    <div class="diagram">
+      <svg viewBox="0 0 760 190" role="img" aria-labelledby="ladder-title">
+        <title id="ladder-title">Adoption in three steps: Observe reads only, Merge merges the intent into the section, Replace makes the section the intent.</title>
+        <defs>
+          <marker id="hp" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="h-plain" d="M0,0 L10,5 L0,10 z"/></marker>
+        </defs>
+        <rect class="step-observe" x="16" y="112" width="232" height="64" rx="8"/>
+        <text x="34" y="139" font-size="15" font-weight="700">Observe</text>
+        <text x="34" y="161" font-size="13" class="muted">reads only, shows the drift</text>
+
+        <rect class="step-merge" x="264" y="68" width="232" height="64" rx="8"/>
+        <text x="282" y="95" font-size="15" font-weight="700">Merge</text>
+        <text x="282" y="117" font-size="13" class="muted">intent merged into the section</text>
+
+        <rect class="step-replace" x="512" y="24" width="232" height="64" rx="8"/>
+        <text x="530" y="51" font-size="15" font-weight="700">Replace</text>
+        <text x="530" y="73" font-size="13" class="muted">the section becomes the intent</text>
+
+        <path class="plain" d="M 248 144 H 256 V 100 H 260" marker-end="url(#hp)"/>
+        <path class="plain" d="M 496 100 H 504 V 56 H 508" marker-end="url(#hp)"/>
+      </svg>
+    </div>
+  </section>
+
+  <section data-part="method">
+    <div class="part">How</div>
+    <h2>Kubernetes, in network terms</h2>
+    <p>You do not need to run a Kubernetes platform to start. Most of it maps onto things you already know:</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>On the network</th><th>In Kubernetes</th></tr></thead>
+        <tbody>
+          <tr><td>the intended configuration</td><td>an object's spec</td></tr>
+          <tr><td>show commands</td><td>the object's status</td></tr>
+          <tr><td>a routing protocol, converging</td><td>reconcile: the loop that keeps converging on the spec</td></tr>
+          <tr><td>the CLI</td><td><code>kubectl</code></td></tr>
+          <tr><td>a configuration template you add</td><td>a new kind of object, defined in YAML with Crossplane</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Kubernetes runs on your laptop in Docker, with <a href="https://kind.sigs.k8s.io/">kind</a> (Kubernetes in Docker). For convenience, one command does the setup:</p>
+    <pre>uvx netclab up</pre>
+    <p>It runs the <a href="https://github.com/netclab/netclab-chart#readme">steps you could run by hand</a>: a kind cluster, then Crossplane and a lab when asked. What it leaves is a plain cluster, and <code>kubectl</code> works with it as usual. Images such as cEOS you bring yourself, as for any lab.</p>
+  </section>
+
+  <section data-part="method">
+    <div class="part">How</div>
+    <h2>Your knowledge is the asset</h2>
+    <p>What you learn about a device goes into a package you own, tested against the device and released. It stops being something in your head and becomes something your team versions, reviews and builds on. Nobody waits for a vendor's roadmap, and the next engineer installs a version instead of finding it out again.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>What an engineer found out</th><th>What the package does about it</th></tr></thead>
+        <tbody>
+          <tr><td>IOS XE 17.18 has no post-quantum preshared key in its YANG</td><td>writes it over the CLI by RPC; on 26.x, where the YANG has it, over RESTCONF, picked by the router's version</td></tr>
+          <tr><td>IOS XE refuses overlapping writes (<code>409 lock-denied</code>)</td><td>each object waits until the objects it names are Ready</td></tr>
+          <tr><td>a key changed without a clear leaves the SA on the old key</td><td>every rotation writes the key, then clears the peer's SA</td></tr>
+          <tr><td>AWS's tunnel telemetry lags the router by minutes</td><td>the status columns read the router</td></tr>
+          <tr><td>new keys on both tunnels at once take both tunnels down</td><td>rotates one tunnel at a time; the next once the first is up on its new key, with BGP established</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Packages go to a public registry or to your own private one. What your team learns about your network can stay yours.</p>
+  </section>
+
+  <section id="examples" data-part="examples">
+    <div class="part">Proof</div>
+    <h2>Shown on real problems</h2>
+    <p>No single package shows everything. Together they show each part of the method.</p>
+    <div class="cards">
+      <div class="card">
+        <h3>Site-to-Site VPN from Cisco IOS XE to AWS</h3>
+        <p>One object makes the VPN connection on AWS and both tunnels on the router.</p>
+        <div class="shows">What it shows</div>
+        <ul>
+          <li>the cloud and the router in one object</li>
+          <li>tunnel and BGP state decide when a key rotation moves on</li>
+          <li>AWS's recommended settings, from its own sample configuration</li>
+        </ul>
+        <div class="links">
+          <a href="/netclab-xp/aws-vpn/">Read</a>
+          <a href="/netclab-xp/aws-vpn/#quick-start">Quick start</a>
+        </div>
       </div>
-    </li>
-  </ul>
+      <div class="card">
+        <h3>IPsec on Cisco IOS XE</h3>
+        <p>An object per section of the router's IPsec configuration.</p>
+        <div class="shows">What it shows</div>
+        <ul>
+          <li>a router configured by hand, taken over one section at a time</li>
+          <li>a post-quantum preshared key kept, though the YANG lacks it</li>
+          <li>the tunnel's interface and its IKEv2 SA in the status</li>
+        </ul>
+        <div class="links">
+          <a href="/netclab-xp/iosxe/">Read</a>
+          <a href="/netclab-xp/iosxe/#quick-start">Quick start</a>
+          <a href="/netclab-xp/iosxe/adopt/">Adopt a router</a>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Your AVD fabric, live in Kubernetes</h3>
+        <p>An AVD repository as it is, run in the cluster.</p>
+        <div class="shows">What it shows</div>
+        <ul>
+          <li>nothing rewritten: the repository read as it is, with a report of what cannot be carried</li>
+          <li>a change made by hand on a switch put back</li>
+          <li>a lab twin of the switches, in containerlab or netclab</li>
+        </ul>
+        <div class="links">
+          <a href="/avd/">Screenshots</a>
+          <a href="/avd/#quickstart">Quick start</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="your-turn" data-part="your-turn">
+    <div class="part">Your turn</div>
+    <h2>Build your own</h2>
+    <p>A new kind of object is two pieces of YAML, with no controller code:</p>
+    <div class="diagram">
+      <svg viewBox="0 0 760 150" role="img" aria-labelledby="kind-title">
+        <title id="kind-title">A kind is an XRD, the shape of a configuration section, and a composition, how it reaches the device.</title>
+        <defs>
+          <marker id="hc2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="h-change" d="M0,0 L10,5 L0,10 z"/></marker>
+        </defs>
+        <rect class="box" x="20" y="20" width="300" height="100" rx="8"/>
+        <text x="40" y="50" font-size="15" font-weight="700">XRD</text>
+        <text x="40" y="76" font-size="13">the shape of your section:</text>
+        <text x="40" y="96" font-size="13" class="muted">its fields and the rules they keep</text>
+
+        <rect class="box" x="440" y="20" width="300" height="100" rx="8"/>
+        <text x="460" y="50" font-size="15" font-weight="700">Composition</text>
+        <text x="460" y="76" font-size="13">how it reaches the device:</text>
+        <text x="460" y="96" font-size="13" class="muted">a template of RESTCONF or eAPI calls</text>
+
+        <path class="l-change" d="M 324 70 H 432" marker-end="url(#hc2)"/>
+        <text x="380" y="60" text-anchor="middle" font-size="13" class="t-change">one kind</text>
+      </svg>
+    </div>
+    <p>If you have written Jinja templates for Ansible, the composition will look familiar.</p>
+
+    <h3>Floor by floor</h3>
+    <p>A kind can compose other kinds. Each floor is a package of its own, with its own releases, and speaks its own words: the router's at the bottom, the service's above.</p>
+    <div class="diagram">
+      <svg viewBox="0 0 760 290" role="img" aria-labelledby="floors-title">
+        <title id="floors-title">Connection, from configuration-aws-vpn, composes the device floor: IOS XE kinds from configuration-iosxe and AWS resources from the AWS provider, which reach the router and the AWS API.</title>
+        <defs>
+          <marker id="hp2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="h-plain" d="M0,0 L10,5 L0,10 z"/></marker>
+        </defs>
+        <text x="20" y="57" font-size="12" font-weight="700" class="muted" letter-spacing="1">CONNECTION</text>
+        <text x="20" y="182" font-size="12" font-weight="700" class="muted" letter-spacing="1">DEVICE</text>
+
+        <rect class="box-object" x="250" y="22" width="300" height="64" rx="8"/>
+        <text x="400" y="50" text-anchor="middle" font-size="15" font-weight="700">Connection</text>
+        <text x="400" y="70" text-anchor="middle" font-size="12" class="muted">configuration-aws-vpn</text>
+
+        <path class="plain" d="M 360 86 L 250 140" marker-end="url(#hp2)"/>
+        <path class="plain" d="M 440 86 L 550 140" marker-end="url(#hp2)"/>
+
+        <rect class="box" x="110" y="142" width="280" height="80" rx="8"/>
+        <text x="250" y="168" text-anchor="middle" font-size="13" font-weight="700">TunnelInterface, IpsecProfile,</text>
+        <text x="250" y="187" text-anchor="middle" font-size="13" font-weight="700">Ikev2Profile, Ikev2Keyring, ...</text>
+        <text x="250" y="208" text-anchor="middle" font-size="12" class="muted">configuration-iosxe</text>
+
+        <rect class="box" x="410" y="142" width="280" height="80" rx="8"/>
+        <text x="550" y="177" text-anchor="middle" font-size="13" font-weight="700">CustomerGateway, VPNConnection</text>
+        <text x="550" y="208" text-anchor="middle" font-size="12" class="muted">AWS provider</text>
+
+        <path class="plain" d="M 250 222 V 250" marker-end="url(#hp2)"/>
+        <path class="plain" d="M 550 222 V 250" marker-end="url(#hp2)"/>
+        <text x="250" y="272" text-anchor="middle" font-size="13" class="muted">router: RESTCONF, CLI by RPC</text>
+        <text x="550" y="272" text-anchor="middle" font-size="13" class="muted">AWS API</text>
+      </svg>
+    </div>
+    <p>The device floor is worth having on its own: configuration-iosxe keeps a router's IPsec sections with nothing above it. Build up when a service needs it. Then the VPN team works with the few fields of a Connection, and what the IOS XE expert encoded in the floor below is used without being repeated.</p>
+    <p>Where a good model already exists, adopt it instead of building one. An AVD repository keeps Arista AVD's own design model, the knowledge its community encoded, and the cluster runs it as it is.</p>
+
+    <h3>Start with the exercises</h3>
+    <p>It started with Arista EOS: configuration-eos holds the first exercises, settings over eAPI and RESTCONF, rough in places. It is being rewritten as a tutorial, a step a page: a device, then a BGP neighbor between two cEOS nodes, with the session's state in the status.</p>
+    <div class="links">
+      <a href="/netclab-xp/eos/">The exercises</a>
+      <a href="https://github.com/netclab/netclab-xp">Source</a>
+    </div>
+  </section>
+
+  <section data-part="your-turn">
+    <div class="part">Your turn</div>
+    <h2>What stays your decision</h2>
+    <ul class="points">
+      <li>which problem to solve first, and how far to take it</li>
+      <li>how fast: each section observed before anything is written</li>
+      <li>how a device is reached: RESTCONF, eAPI, or its CLI where the YANG stops</li>
+      <li>when: there is no roadmap to wait for</li>
+      <li>whether to build a model, build on one, or adopt one that exists</li>
+      <li>where your packages live: a public registry, or a private one</li>
+      <li>whether to leave: plain Kubernetes and Crossplane, open source under Apache-2.0</li>
+    </ul>
+  </section>
+
+  <section id="everything" data-part="everything">
+    <h2>Everything here</h2>
+    <ul class="index">
+      <li>
+        <div class="name">netclab and netclab-chart</div>
+        <div class="desc">One command brings up Kubernetes on your laptop with a lab: routers, hosts and traffic generators as pods (cEOS, SR Linux, FRR, ixia-c), cabled with Multus.</div>
+        <div class="links"><a href="https://pypi.org/project/netclab/">PyPI</a><a href="/netclab-chart/">Helm repository</a><a href="https://github.com/netclab/netclab-chart">Source</a></div>
+      </li>
+      <li>
+        <div class="name">netclab-xp</div>
+        <div class="desc">Crossplane packages: configuration-aws-vpn, configuration-iosxe, and configuration-eos.</div>
+        <div class="links"><a href="/netclab-xp/">Documentation</a><a href="https://github.com/netclab/netclab-xp">Source</a></div>
+      </li>
+      <li>
+        <div class="name">netadopt</div>
+        <div class="desc">Reads an AVD repository, reports what it holds, and writes it as Kubernetes objects, with a lab of its switches.</div>
+        <div class="links"><a href="https://pypi.org/project/netadopt/">PyPI</a><a href="https://github.com/netclab/netadopt">Source</a></div>
+      </li>
+      <li>
+        <div class="name">function-avd</div>
+        <div class="desc">Runs AVD in Kubernetes and pushes each switch's configuration over eAPI.</div>
+        <div class="links"><a href="https://github.com/netclab/function-avd">Source</a></div>
+      </li>
+      <li>
+        <div class="name">function-eapi</div>
+        <div class="desc">EOS CLI commands as objects, applied over JSON-RPC.</div>
+        <div class="links"><a href="https://github.com/netclab/function-eapi">Source</a></div>
+      </li>
+      <li>
+        <div class="name">Slides</div>
+        <div class="desc">Decks on an AVD fabric live in Kubernetes, IPsec on Cisco IOS XE, and netclab-xp's first resources.</div>
+        <div class="links"><a href="/slides/">Slides</a></div>
+      </li>
+    </ul>
+  </section>
 
   <footer>
     <p>APIs are <code>v1alpha1</code> and may change.</p>
@@ -194,5 +528,30 @@
   </footer>
 
 </main>
+<script>
+  // Marks the part of the page being read in the sticky bar, and measures the bar for the jumps.
+  (function () {
+    var links = {};
+    document.querySelectorAll('nav.parts a').forEach(function (a) {
+      links[a.getAttribute('href').slice(1)] = a;
+    });
+    var sections = Array.prototype.slice.call(document.querySelectorAll('section[data-part]'));
+    var nav = document.querySelector('nav.parts');
+    function measure() {
+      document.documentElement.style.setProperty('--nav-h', nav.offsetHeight + 'px');
+    }
+    function mark() {
+      var line = window.innerHeight * 0.3, part = null;
+      sections.forEach(function (s) {
+        if (s.getBoundingClientRect().top <= line) part = s.getAttribute('data-part');
+      });
+      Object.keys(links).forEach(function (k) { links[k].classList.toggle('current', k === part); });
+    }
+    window.addEventListener('scroll', mark, { passive: true });
+    window.addEventListener('resize', function () { measure(); mark(); });
+    measure();
+    mark();
+  })();
+</script>
 </body>
 </html>
