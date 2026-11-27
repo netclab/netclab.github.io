@@ -114,6 +114,7 @@
   .points li { padding-left: 1rem; border-left: 3px solid var(--rule); }
   .points li.c { border-left-color: var(--change); }
   .points li.r { border-left-color: var(--reconcile); }
+  .points + p { margin-top: 2.5rem; }
 
   .table-wrap { overflow-x: auto; margin: 1.5rem 0; }
   table { width: 100%; border-collapse: collapse; font-size: .95rem; }
@@ -157,7 +158,7 @@
   </div>
 
   <h1>Network automation that leaves the engineer free.</h1>
-  <p class="lede">An NMS decides what you can automate, and when. This method lets you decide: one problem at a time, starting from the configuration already on your devices, with what you learn kept in packages you own and release.</p>
+  <p class="lede">An NMS decides what you can automate, and when. This method is not another NMS: you decide, one problem at a time, starting from the configuration already on your devices, with what you learn kept in packages you own and release.</p>
   <div class="cta">
     <a class="primary" href="#examples">See it on real problems</a>
   </div>
@@ -175,7 +176,7 @@
     <h2>Two problems you know</h2>
     <div class="pair">
       <div>
-        <h3>Automation that does not stay</h3>
+        <h3>What automation configures does not stay</h3>
         <p>Configuration drifts. Scripts push once and walk away, and nothing tells you whether what they sent still holds.</p>
       </div>
       <div>
@@ -184,6 +185,7 @@
       </div>
     </div>
     <p>The answer on offer to both is an NMS: the vendor automates what it chose to support, encodes what network engineers know, and sells it back to you, late.</p>
+    <p>What follows has nothing to buy and no platform to move onto: packages you install, read, change and release yourself, on plain Kubernetes and Crossplane.</p>
   </section>
 
   <section data-part="why">
@@ -254,7 +256,7 @@
       <li>Try every change on a twin first: the same objects against a lab of the same devices, on your laptop.</li>
     </ul>
 
-    <p>The same on one real object, a tunnel interface on Cisco IOS XE, shortened:</p>
+    <p>Both loops on one real object, a tunnel interface on Cisco IOS XE, shortened:</p>
 <pre class="yaml">kind: TunnelInterface
 metadata:
   name: r1--tunnel0--d311cfe5
@@ -309,12 +311,13 @@ metadata:
         <path class="plain" d="M 496 100 H 504 V 56 H 508" marker-end="url(#hp)"/>
       </svg>
     </div>
+    <p>Each step is one field of the object above, <code>managementPolicy</code>, changed in a pull request. Without it, an object only reads. Replace need not be the goal: Merge keeps your intent and leaves the rest of the section as it is, and a section can stay there. <a href="/netclab-xp/iosxe/adopt/">A router adopted, step by step</a></p>
   </section>
 
   <section data-part="method">
     <div class="part">How</div>
     <h2>Kubernetes, in network terms</h2>
-    <p>You do not need to run a Kubernetes platform to start. Most of it maps onto things you already know:</p>
+    <p>To start, Kubernetes on your laptop is enough. Most of it maps onto things you already know:</p>
     <div class="table-wrap">
       <table>
         <thead><tr><th>On the network</th><th>In Kubernetes</th></tr></thead>
@@ -327,7 +330,7 @@ metadata:
         </tbody>
       </table>
     </div>
-    <p>Kubernetes runs on your laptop in Docker, with <a href="https://kind.sigs.k8s.io/">kind</a> (Kubernetes in Docker). For convenience, one command does the setup:</p>
+    <p>Kubernetes runs in Docker, with <a href="https://kind.sigs.k8s.io/">kind</a> (Kubernetes in Docker). For convenience, one command does the setup:</p>
     <pre>uvx netclab up</pre>
     <p>It runs the <a href="https://github.com/netclab/netclab-chart#readme">steps you could run by hand</a>: a kind cluster, then Crossplane and a lab when asked. What it leaves is a plain cluster, and <code>kubectl</code> works with it as usual. Images such as cEOS you bring yourself, as for any lab.</p>
   </section>
@@ -427,41 +430,48 @@ metadata:
       </svg>
     </div>
     <p>If you have written Jinja templates for Ansible, the composition will look familiar.</p>
+    <p>Templates go a long way: configuration-iosxe rotates its keys with templates alone. When a kind decides more, the decisions can go into a function: configuration-aws-vpn runs function-aws-vpn, written in Python, before its templates. Which way is yours to pick; Crossplane has function SDKs for Go and Python.</p>
 
     <h3>Floor by floor</h3>
-    <p>A kind can compose other kinds. Each floor is a package of its own, with its own releases, and speaks its own words: the router's at the bottom, the service's above.</p>
+    <p>A kind can compose other kinds. Each floor is a package with its own releases, and there are as many floors as the problem needs.</p>
     <div class="diagram">
-      <svg viewBox="0 0 760 290" role="img" aria-labelledby="floors-title">
-        <title id="floors-title">Connection, from configuration-aws-vpn, composes the device floor: IOS XE kinds from configuration-iosxe and AWS resources from the AWS provider, which reach the router and the AWS API.</title>
+      <svg viewBox="0 0 760 390" role="img" aria-labelledby="floors-title">
+        <title id="floors-title">Connection, from configuration-aws-vpn, composes IOS XE kinds from configuration-iosxe, AWS resources from the AWS provider, and a Request that reads BGP state; the IOS XE kinds compose Requests of provider-http, which reach the router; the AWS provider spans both floors and reaches the AWS API.</title>
         <defs>
           <marker id="hp2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="h-plain" d="M0,0 L10,5 L0,10 z"/></marker>
         </defs>
-        <text x="20" y="57" font-size="12" font-weight="700" class="muted" letter-spacing="1">CONNECTION</text>
-        <text x="20" y="182" font-size="12" font-weight="700" class="muted" letter-spacing="1">DEVICE</text>
 
         <rect class="box-object" x="250" y="22" width="300" height="64" rx="8"/>
         <text x="400" y="50" text-anchor="middle" font-size="15" font-weight="700">Connection</text>
         <text x="400" y="70" text-anchor="middle" font-size="12" class="muted">configuration-aws-vpn</text>
 
-        <path class="plain" d="M 360 86 L 250 140" marker-end="url(#hp2)"/>
-        <path class="plain" d="M 440 86 L 550 140" marker-end="url(#hp2)"/>
+        <path class="plain" d="M 330 86 L 250 140" marker-end="url(#hp2)"/>
+        <path class="plain" d="M 410 86 L 376 255" stroke-dasharray="5 4" marker-end="url(#hp2)"/>
+        <text x="368" y="244" text-anchor="end" font-size="12" class="muted">reads BGP</text>
+        <path class="plain" d="M 470 86 L 540 140" marker-end="url(#hp2)"/>
 
-        <rect class="box" x="110" y="142" width="280" height="80" rx="8"/>
-        <text x="250" y="168" text-anchor="middle" font-size="13" font-weight="700">TunnelInterface, IpsecProfile,</text>
-        <text x="250" y="187" text-anchor="middle" font-size="13" font-weight="700">Ikev2Profile, Ikev2Keyring, ...</text>
-        <text x="250" y="208" text-anchor="middle" font-size="12" class="muted">configuration-iosxe</text>
+        <rect class="box" x="110" y="142" width="260" height="80" rx="8"/>
+        <text x="240" y="168" text-anchor="middle" font-size="13" font-weight="700">TunnelInterface, IpsecProfile,</text>
+        <text x="240" y="187" text-anchor="middle" font-size="13" font-weight="700">Ikev2Profile, Ikev2Keyring, ...</text>
+        <text x="240" y="208" text-anchor="middle" font-size="12" class="muted">configuration-iosxe</text>
 
-        <rect class="box" x="410" y="142" width="280" height="80" rx="8"/>
-        <text x="550" y="177" text-anchor="middle" font-size="13" font-weight="700">CustomerGateway, VPNConnection</text>
-        <text x="550" y="208" text-anchor="middle" font-size="12" class="muted">AWS provider</text>
+        <path class="plain" d="M 240 222 V 253" marker-end="url(#hp2)"/>
 
-        <path class="plain" d="M 250 222 V 250" marker-end="url(#hp2)"/>
-        <path class="plain" d="M 550 222 V 250" marker-end="url(#hp2)"/>
-        <text x="250" y="272" text-anchor="middle" font-size="13" class="muted">router: RESTCONF, CLI by RPC</text>
-        <text x="550" y="272" text-anchor="middle" font-size="13" class="muted">AWS API</text>
+        <rect class="box" x="110" y="257" width="280" height="64" rx="8"/>
+        <text x="250" y="284" text-anchor="middle" font-size="13" font-weight="700">Request</text>
+        <text x="250" y="305" text-anchor="middle" font-size="12" class="muted">provider-http</text>
+
+        <rect class="box" x="410" y="142" width="280" height="179" rx="8"/>
+        <text x="550" y="226" text-anchor="middle" font-size="13" font-weight="700">CustomerGateway, VPNConnection</text>
+        <text x="550" y="247" text-anchor="middle" font-size="12" class="muted">AWS provider</text>
+
+        <path class="plain" d="M 250 321 V 349" marker-end="url(#hp2)"/>
+        <path class="plain" d="M 550 321 V 349" marker-end="url(#hp2)"/>
+        <text x="250" y="372" text-anchor="middle" font-size="13" class="muted">router: RESTCONF, CLI by RPC</text>
+        <text x="550" y="372" text-anchor="middle" font-size="13" class="muted">AWS API</text>
       </svg>
     </div>
-    <p>The device floor is worth having on its own: configuration-iosxe keeps a router's IPsec sections with nothing above it. Build up when a service needs it. Then the VPN team works with the few fields of a Connection, and what the IOS XE expert encoded in the floor below is used without being repeated.</p>
+    <p>A VPN between two IOS XE routers needs nothing above configuration-iosxe. A VPN to AWS adds a floor: the VPN team works with the few fields of a Connection, and what the IOS XE expert encoded below is used without being repeated.</p>
     <p>Where a good model already exists, adopt it instead of building one. An AVD repository keeps Arista AVD's own design model, the knowledge its community encoded, and the cluster runs it as it is.</p>
 
     <h3>Start with the exercises</h3>
@@ -476,8 +486,8 @@ metadata:
     <div class="part">Your turn</div>
     <h2>What stays your decision</h2>
     <ul class="points">
-      <li>which problem to solve first, and how far to take it</li>
-      <li>how fast: each section observed before anything is written</li>
+      <li>which problem to solve first</li>
+      <li>how fast and how far: each section observed first, then merged or replaced</li>
       <li>how a device is reached: RESTCONF, eAPI, or its CLI where the YANG stops</li>
       <li>when: there is no roadmap to wait for</li>
       <li>whether to build a model, build on one, or adopt one that exists</li>
